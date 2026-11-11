@@ -3,7 +3,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colorDeporte, peso, type ModoTema } from '@/constants/tema';
+import { colorDeporte, peso } from '@/constants/tema';
 import { useFlujo } from '@/contexto/flujo';
 import { useTema } from '@/contexto/tema';
 import { listarDeportes, listarEspacios } from '@/servicios/espacios';
@@ -11,7 +11,7 @@ import { alternarFavorito, leerFavoritos } from '@/servicios/favoritos';
 import { esError, type Deporte, type Espacio } from '@/tipos';
 
 export default function EspaciosScreen() {
-  const { paleta, modo, setModo } = useTema();
+  const { paleta } = useTema();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { setEspacioId } = useFlujo();
@@ -88,21 +88,6 @@ export default function EspaciosScreen() {
     <View style={[estilos.pantalla, { paddingTop: insets.top + 8 }]}>
       <Text style={estilos.titulo}>Espacios</Text>
       <Text style={estilos.bajada}>Mirá sin cuenta. La cuenta hace falta recién para reservar.</Text>
-      
-      <View style={estilos.fila}>
-        {(['sistema', 'claro', 'oscuro'] as ModoTema[]).map((m) => (
-          <Pressable
-            key={m}
-            onPress={() => setModo(m)}
-            style={[estilos.chip, modo === m && estilos.chipOn]}
-            accessibilityLabel={`Tema ${m}`}
-            accessibilityState={{ selected: modo === m }}>
-            <Text style={[estilos.chipTexto, modo === m && estilos.chipTextoOn]}>
-              {m === 'sistema' ? 'Sistema' : m === 'claro' ? 'Claro' : 'Oscuro'}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
       <View style={estilos.fila}>
         <Chip paleta={paleta} on={deporte === 'todos'} onPress={() => setDeporte('todos')} texto="Todos" />
         {deportes.map((d) => (
@@ -218,10 +203,6 @@ function crearEstilos(paleta: { fondo: string; texto: string; secundario: string
     bajada: { fontFamily: 'Manrope_400Regular', color: paleta.secundario, fontSize: 13 },
     muted: { fontFamily: 'Manrope_400Regular', color: paleta.secundario, fontSize: 13 },
     fila: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-    chip: { minHeight: 44, paddingHorizontal: 12, borderRadius: 999, borderWidth: 1, borderColor: paleta.linea, justifyContent: 'center' },
-    chipOn: { backgroundColor: paleta.texto },
-    chipTexto: { color: paleta.texto, fontFamily: 'Manrope_400Regular' },
-    chipTextoOn: { color: paleta.fondo },
     cta: { minHeight: 48, borderRadius: 14, backgroundColor: paleta.cta, alignItems: 'center', justifyContent: 'center' },
     ctaTexto: { color: paleta.ctaTexto, fontFamily: 'Manrope_700Bold' },
     card: { marginBottom: 16, position: 'relative' },

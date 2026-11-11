@@ -1,4 +1,3 @@
-export type ModoTema = 'sistema' | 'claro' | 'oscuro';
 export type Esquema = 'claro' | 'oscuro';
 
 export interface Paleta {
