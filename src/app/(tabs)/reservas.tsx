@@ -4,6 +4,7 @@ import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BotonSesion } from '@/components/BotonSesion';
 import { QrMuestra } from '@/components/QrMuestra';
 import { peso } from '@/constants/tema';
 import { useSesion } from '@/contexto/sesion';
@@ -12,7 +13,6 @@ import { esCancelacionTardia, fechaDesdeTurnoId } from '@/dominio/grilla';
 import { tituloDia } from '@/dominio/fechas';
 import { listarEspacios } from '@/servicios/espacios';
 import { cancelarReserva, listarReservas } from '@/servicios/reservas';
-import { salir } from '@/servicios/sesion';
 import { esError, type Espacio, type Reserva } from '@/tipos';
 
 export default function ReservasScreen() {
@@ -20,7 +20,7 @@ export default function ReservasScreen() {
   const insets = useSafeAreaInsets();
   const db = useSQLiteContext();
   const router = useRouter();
-  const { sesion, lista, setSesion } = useSesion();
+  const { sesion, lista } = useSesion();
   const [tab, setTab] = useState<'vienen' | 'pasaron'>('vienen');
   const [reservas, setReservas] = useState<Reserva[]>([]);
   const [espacios, setEspacios] = useState<Espacio[]>([]);
@@ -69,7 +69,10 @@ export default function ReservasScreen() {
   if (!sesion) {
     return (
       <View style={[estilos.pantalla, { paddingTop: insets.top + 16, paddingHorizontal: 16, gap: 12 }]}>
-        <Text style={estilos.titulo}>Reservas</Text>
+        <View style={estilos.cabeza}>
+          <Text style={estilos.titulo}>Reservas</Text>
+          <BotonSesion />
+        </View>
         <Text style={estilos.muted}>Entrá para ver y cancelar tus turnos.</Text>
         <Pressable onPress={() => router.push('/ingresar')} style={estilos.cta}>
           <Text style={estilos.ctaTexto}>Entrar</Text>
@@ -108,17 +111,9 @@ export default function ReservasScreen() {
 
   return (
     <ScrollView style={estilos.pantalla} contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 32 }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16 }}>
+      <View style={[estilos.cabeza, { paddingHorizontal: 16 }]}>
         <Text style={estilos.titulo}>Reservas</Text>
-        <Pressable
-          onPress={async () => {
-            await salir();
-            setSesion(null);
-          }}
-          accessibilityLabel="Salir"
-          style={{ minHeight: 44, justifyContent: 'center' }}>
-          <Text style={{ color: paleta.secundario, fontFamily: 'Manrope_600SemiBold' }}>Salir</Text>
-        </Pressable>
+        <BotonSesion />
       </View>
       <View style={estilos.seg}>
         <Pressable onPress={() => setTab('vienen')} style={[estilos.segBtn, tab === 'vienen' && estilos.segOn]}>
@@ -205,7 +200,8 @@ function horaDeTurno(turnoId: string): string {
 function crear(paleta: ReturnType<typeof useTema>['paleta']) {
   return StyleSheet.create({
     pantalla: { flex: 1, backgroundColor: paleta.fondo },
-    titulo: { fontFamily: 'BarlowCondensed_600SemiBold', fontSize: 42, color: paleta.texto },
+    cabeza: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 10 },
+    titulo: { fontFamily: 'BarlowCondensed_600SemiBold', fontSize: 42, color: paleta.texto, flex: 1 },
     muted: { fontFamily: 'Manrope_400Regular', color: paleta.secundario, fontSize: 13, paddingHorizontal: 16 },
     cta: { minHeight: 48, borderRadius: 14, backgroundColor: paleta.cta, alignItems: 'center', justifyContent: 'center' },
     ctaTexto: { color: paleta.ctaTexto, fontFamily: 'Manrope_700Bold' },

@@ -1,5 +1,5 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
 
 import { useTema } from '@/contexto/tema';
 
@@ -22,21 +22,21 @@ export default function TabsLayout() {
         name="espacios"
         options={{
           title: 'Espacios',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 16 }}>▦</Text>,
+          tabBarIcon: ({ color }) => <Ionicons name="grid-outline" size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="turnos"
         options={{
           title: 'Turnos',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 16 }}>▦</Text>,
+          tabBarIcon: ({ color }) => <Ionicons name="calendar-outline" size={22} color={color} />,
         }}
       />
       <Tabs.Screen
         name="reservas"
         options={{
           title: 'Reservas',
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 16 }}>▣</Text>,
+          tabBarIcon: ({ color }) => <Ionicons name="ticket-outline" size={22} color={color} />,
         }}
       />
     </Tabs>

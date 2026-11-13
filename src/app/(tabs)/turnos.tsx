@@ -1,9 +1,11 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BotonSesion } from '@/components/BotonSesion';
 import { peso } from '@/constants/tema';
 import { useFlujo } from '@/contexto/flujo';
 import { useSesion } from '@/contexto/sesion';
@@ -81,7 +83,10 @@ export default function TurnosScreen() {
   if (!espacioId) {
     return (
       <View style={[estilos.pantalla, { paddingTop: insets.top + 8 }]}>
-        <Text style={estilos.titulo}>Turnos</Text>
+        <View style={[estilos.cabeza, { paddingHorizontal: 16 }]}>
+          <Text style={[estilos.titulo, { paddingHorizontal: 0, flex: 1 }]}>Turnos</Text>
+          <BotonSesion />
+        </View>
         <Text style={estilos.muted}>Elegí un espacio para ver la grilla.</Text>
       </View>
     );
@@ -137,7 +142,7 @@ export default function TurnosScreen() {
     <View style={[estilos.pantalla, { paddingTop: insets.top + 4 }]}>
       <View style={estilos.cabeza}>
         <Pressable onPress={() => router.navigate('/(tabs)/espacios')} style={estilos.icono} accessibilityLabel="Volver a espacios">
-          <Text style={estilos.iconoTexto}>←</Text>
+          <Ionicons name="chevron-back" size={24} color={paleta.texto} />
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={estilos.nombre}>{espacio.nombre}</Text>
@@ -147,8 +152,9 @@ export default function TurnosScreen() {
           style={estilos.icono}
           onPress={async () => setFavoritos(await alternarFavorito(espacio.id))}
           accessibilityLabel={fav ? 'Sacar de favoritos' : 'Marcar como favorito'}>
-          <Text style={{ color: fav ? '#f5c451' : paleta.texto, fontSize: 20 }}>{fav ? '★' : '☆'}</Text>
+          <Ionicons name={fav ? 'star' : 'star-outline'} size={22} color={fav ? '#f5c451' : paleta.texto} />
         </Pressable>
+        <BotonSesion />
       </View>
 
       <Text style={estilos.regla}>{espacio.reglas}</Text>
@@ -225,7 +231,7 @@ export default function TurnosScreen() {
                   onPress={() => setPersonas((p) => p - 1)}
                   style={estilos.step}
                   accessibilityLabel="Menos personas">
-                  <Text style={{ color: paleta.texto, fontSize: 22 }}>−</Text>
+                  <Ionicons name="remove" size={22} color={paleta.texto} />
                 </Pressable>
                 <Text style={{ minWidth: 28, textAlign: 'center', color: paleta.texto, fontFamily: 'Manrope_700Bold' }}>{personas}</Text>
                 <Pressable
@@ -233,7 +239,7 @@ export default function TurnosScreen() {
                   onPress={() => setPersonas((p) => p + 1)}
                   style={estilos.step}
                   accessibilityLabel="Más personas">
-                  <Text style={{ color: paleta.texto, fontSize: 22 }}>+</Text>
+                  <Ionicons name="add" size={22} color={paleta.texto} />
                 </Pressable>
               </View>
               <Pressable onPress={reservar} style={[estilos.cta, { flex: 1 }]}>
@@ -341,9 +347,8 @@ function crear(paleta: ReturnType<typeof useTema>['paleta']) {
     pantalla: { flex: 1, backgroundColor: paleta.fondo },
     titulo: { fontFamily: 'BarlowCondensed_600SemiBold', fontSize: 42, color: paleta.texto, paddingHorizontal: 16 },
     muted: { fontFamily: 'Manrope_400Regular', color: paleta.secundario, fontSize: 13, paddingHorizontal: 16 },
-    cabeza: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6 },
+    cabeza: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6, zIndex: 10 },
     icono: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-    iconoTexto: { color: paleta.texto, fontSize: 22 },
     nombre: { fontFamily: 'Manrope_700Bold', fontSize: 20, color: paleta.texto, textAlign: 'center' },
     regla: { marginHorizontal: 16, marginTop: 6, color: paleta.secundario, fontSize: 13, fontFamily: 'Manrope_400Regular' },
     videoBtn: { marginHorizontal: 16, marginTop: 8, minHeight: 44, borderRadius: 10, backgroundColor: paleta.superficie, justifyContent: 'center', paddingHorizontal: 12 },
