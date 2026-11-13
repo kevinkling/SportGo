@@ -1,0 +1,29 @@
+---
+description: Usar pnpm como único gestor de paquetes del proyecto
+alwaysApply: true
+---
+
+# Gestor de paquetes: pnpm
+
+Este proyecto usa **pnpm**. El lockfile es `pnpm-lock.yaml`.
+
+- Instalar dependencias: `pnpm install`
+- Añadir un paquete de Expo o React Native: `pnpm exec expo install <paquete>` (resuelve la versión compatible con el SDK)
+- Añadir un paquete que no sea de Expo: `pnpm add <paquete>` o `pnpm add -D <paquete>`
+- Ejecutar binarios locales: `pnpm exec <comando>` o el script de `package.json` (`pnpm start`, `pnpm lint`, `pnpm test`)
+- CLI puntual que no está en el proyecto: `pnpm dlx <paquete>`
+
+No uses npm, yarn, bun, `npx` ni `bunx`. No crees `package-lock.json`, `yarn.lock` ni `bun.lock`.
+
+```bash
+# Instalar una librería de Expo
+pnpm exec expo install expo-camera
+
+# Typecheck, lint y doctor
+pnpm exec tsc --noEmit
+pnpm lint
+pnpm exec expo-doctor
+
+# EAS
+pnpm dlx eas-cli@latest build
+```

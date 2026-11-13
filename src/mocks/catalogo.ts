@@ -13,6 +13,26 @@ export const deportes: Deporte[] = [
   { id: 'dep-gimnasio', nombre: 'Gimnasio', icono: 'barbell-outline', color: '#31404d' },
 ];
 
+/** Cantidad de fotos mock locales en assets/images/mocks/{id}-{n}.jpg */
+const FOTOS_POR_ESPACIO: Record<string, number> = {
+  'esp-01': 4,
+  'esp-02': 4,
+  'esp-03': 4,
+  'esp-04': 4,
+  'esp-05': 3,
+  'esp-06': 4,
+  'esp-07': 4,
+  'esp-08': 3,
+  'esp-09': 4,
+  'esp-10': 3,
+  'esp-11': 5,
+};
+
+function imagenesEspacio(id: string): string[] {
+  const n = FOTOS_POR_ESPACIO[id] ?? 3;
+  return Array.from({ length: n }, (_, i) => `https://api.villaguay.gob.ar/img/${id}-${i + 1}.jpg`);
+}
+
 function espacio(
   id: string,
   nombre: string,
@@ -38,7 +58,7 @@ function espacio(
     capacidad,
     precioPorHora,
     coordenadas: poli ? POLI : BERDUC,
-    imagenes: [`https://api.villaguay.gob.ar/img/${id}.jpg`],
+    imagenes: imagenesEspacio(id),
     videoUrl: video ? `https://api.villaguay.gob.ar/v/${id}.mp4` : null,
     reglas,
     activo: true,
@@ -46,15 +66,15 @@ function espacio(
 }
 
 export const espacios: Espacio[] = [
-  espacio('esp-01', 'Cancha 1 — Fútbol 5', 'dep-futbol5', 'Polideportivo Municipal', 'césped sintético', true, false, 10, 12000, true, 'No se permite calzado con tapones de aluminio.'),
-  espacio('esp-02', 'Cancha 2 — Fútbol 5', 'dep-futbol5', 'Polideportivo Municipal', 'césped sintético', true, false, 10, 12000, true, 'No se permite calzado con tapones de aluminio.'),
-  espacio('esp-03', 'Cancha 11 — Fútbol 11', 'dep-futbol11', 'Polideportivo Municipal', 'césped natural', true, false, 22, 18000, true, 'No se permite calzado con tapones de aluminio.'),
-  espacio('esp-04', 'Básquet 1', 'dep-basquet', 'Polideportivo Municipal', 'cemento', true, false, 10, 8000, true, 'Se juega con zapatillas, no con botines.'),
+  espacio('esp-01', 'Cancha 1 — Fútbol 5', 'dep-futbol5', 'Polideportivo Municipal', 'césped sintético', true, false, 10, 12000, false, 'No se permite calzado con tapones de aluminio.'),
+  espacio('esp-02', 'Cancha 2 — Fútbol 5', 'dep-futbol5', 'Polideportivo Municipal', 'césped sintético', true, false, 10, 12000, false, 'No se permite calzado con tapones de aluminio.'),
+  espacio('esp-03', 'Cancha 11 — Fútbol 11', 'dep-futbol11', 'Polideportivo Municipal', 'césped natural', true, false, 22, 18000, false, 'No se permite calzado con tapones de aluminio.'),
+  espacio('esp-04', 'Básquet 1', 'dep-basquet', 'Polideportivo Municipal', 'cemento', true, false, 10, 8000, false, 'Se juega con zapatillas, no con botines.'),
   espacio('esp-05', 'Básquet 2', 'dep-basquet', 'Polideportivo Municipal', 'cemento', true, false, 10, 8000, false, 'Se juega con zapatillas, no con botines.'),
   espacio('esp-06', 'Básquet 3', 'dep-basquet', 'Polideportivo Municipal', 'parquet', true, true, 10, 8000, false, 'Se juega con zapatillas, no con botines.'),
-  espacio('esp-07', 'Vóley 1', 'dep-voley', 'Polideportivo Municipal', 'piso sintético', true, false, 12, 8000, true, 'La red queda armada.'),
+  espacio('esp-07', 'Vóley 1', 'dep-voley', 'Polideportivo Municipal', 'piso sintético', true, false, 12, 8000, false, 'La red queda armada.'),
   espacio('esp-08', 'Vóley 2', 'dep-voley', 'Polideportivo Municipal', 'piso sintético', true, false, 12, 8000, false, 'La red queda armada.'),
-  espacio('esp-09', 'Tenis 1', 'dep-tenis', 'Parque Berduc', 'polvo de ladrillo', true, false, 4, 6000, true, 'Traé la raqueta. La red es fija.'),
+  espacio('esp-09', 'Tenis 1', 'dep-tenis', 'Parque Berduc', 'polvo de ladrillo', true, false, 4, 6000, false, 'Traé la raqueta. La red es fija.'),
   espacio('esp-10', 'Tenis 2', 'dep-tenis', 'Parque Berduc', 'polvo de ladrillo', false, false, 4, 6000, false, 'Traé la raqueta. Esta cancha no tiene luz.'),
   espacio('esp-11', 'Gimnasio', 'dep-gimnasio', 'Polideportivo Municipal', 'piso de goma', true, true, 30, 10000, true, 'Calzado de piso. Sin botines.'),
 ];

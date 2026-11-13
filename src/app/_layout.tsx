@@ -4,9 +4,11 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { SQLiteProvider } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useCallback, useState } from 'react';
+import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { SplashInicio } from '@/components/SplashInicio';
 import { FlujoProvider } from '@/contexto/flujo';
 import { SesionProvider } from '@/contexto/sesion';
 import { TemaProvider, useTema } from '@/contexto/tema';
@@ -16,8 +18,11 @@ SplashScreen.preventAutoHideAsync();
 
 function Navegacion() {
   const { paleta, esquema } = useTema();
+  const [intro, setIntro] = useState(true);
+  const cerrarIntro = useCallback(() => setIntro(false), []);
+
   return (
-    <>
+    <View style={{ flex: 1, backgroundColor: paleta.fondo }}>
       <StatusBar style={esquema === 'oscuro' ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
@@ -29,8 +34,10 @@ function Navegacion() {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="ingresar" options={{ title: 'Entrar' }} />
+        <Stack.Screen name="espacio" options={{ headerShown: false }} />
       </Stack>
-    </>
+      {intro ? <SplashInicio onTerminar={cerrarIntro} /> : null}
+    </View>
   );
 }
 
@@ -38,10 +45,6 @@ export default function RootLayout() {
   const [manrope] = useManrope({ Manrope_400Regular, Manrope_600SemiBold, Manrope_700Bold });
   const [barlow] = useBarlow({ BarlowCondensed_600SemiBold });
   const listo = manrope && barlow;
-
-  useEffect(() => {
-    if (listo) SplashScreen.hideAsync();
-  }, [listo]);
 
   if (!listo) return null;
 

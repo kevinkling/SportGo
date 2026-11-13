@@ -33,7 +33,6 @@ export default function TurnosScreen() {
   const [personas, setPersonas] = useState(10);
   const [carga, setCarga] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [video, setVideo] = useState(false);
   const [favoritos, setFavoritos] = useState<string[]>([]);
   const [aviso, setAviso] = useState<string | null>(null);
 
@@ -156,20 +155,6 @@ export default function TurnosScreen() {
         </Pressable>
         <BotonSesion />
       </View>
-
-      <Text style={estilos.regla}>{espacio.reglas}</Text>
-      {espacio.videoUrl ? (
-        <Pressable onPress={() => setVideo((v) => !v)} style={estilos.videoBtn}>
-          <Text style={{ color: paleta.texto }}>{video ? 'Cerrar recorrido' : 'Ver el recorrido · 30 s'}</Text>
-        </Pressable>
-      ) : null}
-      {video ? (
-        <View style={estilos.player}>
-          <Text style={{ color: '#f3f0e4', textAlign: 'center' }}>
-            Recorrido de 30 segundos. Queda en el teléfono para verlo sin datos.
-          </Text>
-        </View>
-      ) : null}
 
       <View style={estilos.dias}>
         {dias.map((f) => {
@@ -350,9 +335,6 @@ function crear(paleta: ReturnType<typeof useTema>['paleta']) {
     cabeza: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6, zIndex: 10 },
     icono: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
     nombre: { fontFamily: 'Manrope_700Bold', fontSize: 20, color: paleta.texto, textAlign: 'center' },
-    regla: { marginHorizontal: 16, marginTop: 6, color: paleta.secundario, fontSize: 13, fontFamily: 'Manrope_400Regular' },
-    videoBtn: { marginHorizontal: 16, marginTop: 8, minHeight: 44, borderRadius: 10, backgroundColor: paleta.superficie, justifyContent: 'center', paddingHorizontal: 12 },
-    player: { marginHorizontal: 16, marginTop: 8, minHeight: 128, borderRadius: 14, backgroundColor: '#070807', alignItems: 'center', justifyContent: 'center', padding: 16 },
     dias: { flexDirection: 'row', gap: 4, paddingHorizontal: 12, paddingTop: 12 },
     dia: { flex: 1, minHeight: 52, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
     diaN: { fontSize: 16, fontFamily: 'Manrope_700Bold', color: paleta.secundario },

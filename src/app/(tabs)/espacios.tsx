@@ -1,7 +1,8 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useRouter, type Href } from 'expo-router';
+import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, FlatList, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BotonSesion } from '@/components/BotonSesion';
@@ -10,6 +11,7 @@ import { useFlujo } from '@/contexto/flujo';
 import { useTema } from '@/contexto/tema';
 import { listarDeportes, listarEspacios } from '@/servicios/espacios';
 import { alternarFavorito, leerFavoritos } from '@/servicios/favoritos';
+import { portadasDeEspacios } from '@/servicios/medios';
 import { esError, type Deporte, type Espacio } from '@/tipos';
 
 type FiltroAbierto = 'espacio' | 'complejo' | null;
@@ -24,9 +26,11 @@ export default function EspaciosScreen() {
   const { paleta } = useTema();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const db = useSQLiteContext();
   const { setEspacioId } = useFlujo();
   const [deportes, setDeportes] = useState<Deporte[]>([]);
   const [lista, setLista] = useState<Espacio[]>([]);
+  const [portadas, setPortadas] = useState<Record<string, string>>({});
   const [carga, setCarga] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [espaciosElegidos, setEspaciosElegidos] = useState<string[]>([]);
@@ -37,7 +41,12 @@ export default function EspaciosScreen() {
   const cargar = useCallback(async () => {
     setCarga(true);
     setError(null);
-    const [d, e, fav] = await Promise.all([listarDeportes(), listarEspacios(), leerFavoritos()]);
+    const [d, e, fav, fotos] = await Promise.all([
+      listarDeportes(),
+      listarEspacios(),
+      leerFavoritos(),
+      portadasDeEspacios(db),
+    ]);
     if (esError(e)) {
       setError(e.error.mensaje);
       setCarga(false);
@@ -51,8 +60,9 @@ export default function EspaciosScreen() {
     setDeportes(d.datos);
     setLista(e.datos);
     setFavoritos(fav);
+    setPortadas(fotos);
     setCarga(false);
-  }, []);
+  }, [db]);
 
   useFocusEffect(
     useCallback(() => {
@@ -183,6 +193,7 @@ export default function EspaciosScreen() {
           const deporte = deportes.find((d) => d.id === item.deporteId);
           const deporteNombre = deporte?.nombre ?? '';
           const fav = favoritos.includes(item.id);
+          const portada = portadas[item.id];
           return (
             <View style={estilos.card}>
               <Pressable
@@ -197,11 +208,18 @@ export default function EspaciosScreen() {
               <Pressable
                 onPress={() => {
                   setEspacioId(item.id);
-                  router.navigate('/(tabs)/turnos');
+                  router.push(`/espacio/${item.id}` as Href);
                 }}
                 style={{ paddingBottom: 8 }}>
                 <View style={[estilos.banner, { backgroundColor: colorDeporte[item.deporteId] ?? '#31404d' }]}>
-                  {deporte ? <Ionicons name={deporte.icono} size={40} color="#f3f0e4" /> : null}
+                  {portada ? (
+                    <>
+                      <Image source={{ uri: portada }} style={estilos.portada} />
+                      <View style={estilos.velo} />
+                    </>
+                  ) : deporte ? (
+                    <Ionicons name={deporte.icono} size={40} color="#f3f0e4" />
+                  ) : null}
                 </View>
                 <Text style={estilos.nombre}>{item.nombre}</Text>
                 <Text style={estilos.muted}>
@@ -211,7 +229,7 @@ export default function EspaciosScreen() {
                   <Pill paleta={paleta} texto={item.superficie} />
                   <Pill paleta={paleta} texto={item.iluminacion ? 'Luz' : 'Sin luz'} />
                   {item.techado ? <Pill paleta={paleta} texto="Cubierta" /> : null}
-                  <Pill paleta={paleta} texto={item.videoUrl ? 'Recorrido 30 s' : 'Sin recorrido'} />
+                  <Pill paleta={paleta} texto={item.videoUrl ? 'Recorrido' : 'Sin recorrido'} />
                 </View>
                 <Text style={estilos.precio}>
                   {peso(item.precioPorHora)} <Text style={estilos.muted}>/ hora</Text>
@@ -390,7 +408,9 @@ function crearEstilos(paleta: { fondo: string; texto: string; secundario: string
     cta: { minHeight: 48, borderRadius: 14, backgroundColor: paleta.cta, alignItems: 'center', justifyContent: 'center' },
     ctaTexto: { color: paleta.ctaTexto, fontFamily: 'Manrope_700Bold' },
     card: { marginBottom: 16, position: 'relative' },
-    banner: { height: 96, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+    banner: { height: 120, borderRadius: 16, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+    portada: { ...StyleSheet.absoluteFill },
+    velo: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.38)' },
     nombre: { fontFamily: 'Manrope_700Bold', fontSize: 18, color: paleta.texto, marginTop: 8 },
     pills: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 6 },
     precio: { marginTop: 6, fontFamily: 'Manrope_700Bold', color: paleta.texto, fontSize: 16 },

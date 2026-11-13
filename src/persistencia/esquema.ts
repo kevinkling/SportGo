@@ -1,6 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { reservasHistorial } from '@/mocks/catalogo';
+import { sembrarMedios } from '@/persistencia/medios';
 
 export async function migrar(db: SQLiteDatabase) {
   await db.execAsync(`
@@ -15,6 +16,16 @@ export async function migrar(db: SQLiteDatabase) {
       ingresoEn TEXT,
       creadaEn TEXT NOT NULL,
       cancelableHasta TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS fotos_espacio (
+      espacioId TEXT NOT NULL,
+      orden INTEGER NOT NULL,
+      ruta TEXT NOT NULL,
+      PRIMARY KEY (espacioId, orden)
+    );
+    CREATE TABLE IF NOT EXISTS videos_espacio (
+      espacioId TEXT PRIMARY KEY NOT NULL,
+      ruta TEXT NOT NULL
     );
   `);
 
@@ -37,4 +48,6 @@ export async function migrar(db: SQLiteDatabase) {
       );
     }
   }
+
+  await sembrarMedios(db);
 }

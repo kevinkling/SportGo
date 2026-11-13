@@ -4,18 +4,18 @@
     "slug": "sportgo",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/icono.png",
     "scheme": "sportgo",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.villaguay.sportgo",
-      "icon": "./assets/images/icon.png"
+      "icon": "./assets/images/icono.png"
     },
     "android": {
       "package": "com.villaguay.sportgo",
       "adaptiveIcon": {
-        "backgroundColor": "#101410",
+        "backgroundColor": "#f6f3ea",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
       }
     },
@@ -30,13 +30,20 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#101410",
+          "backgroundColor": "#f6f3ea",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 200,
+          "dark": {
+            "backgroundColor": "#101410",
+            "image": "./assets/images/splash-icon-dark.png"
+          }
         }
       ],
       "expo-font",
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-video",
+      "expo-asset",
+      "expo-file-system"
     ],
     "experiments": {
       "typedRoutes": true,
