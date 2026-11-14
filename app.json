@@ -43,7 +43,27 @@
       "expo-status-bar",
       "expo-video",
       "expo-asset",
-      "expo-file-system"
+      "expo-file-system",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "SportGo usa la cámara para que el encargado lea el código QR en la puerta.",
+          "recordAudioAndroid": false,
+          "barcodeScannerEnabled": true
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "SportGo pide Face ID antes de escanear un ingreso."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#172016"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

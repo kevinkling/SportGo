@@ -1,0 +1,222 @@
+---
+description: PRD de SportGo (Reservas Deportivas, Dirección de Deportes de Villaguay). Fuente de verdad de requisitos, stack, tipos y convenciones.
+alwaysApply: true
+---
+
+# PRD — Reservas Deportivas (Dirección de Deportes de Villaguay)
+
+Fuente: `05 - Reservas Deportivas.pdf` (Trabajo Final Integrador). Redactado por Nahuel Ojeda, director de Deportes de la Municipalidad de Villaguay, Entre Ríos.
+
+## Contexto y problema
+
+11 espacios deportivos municipales: 2 canchas de fútbol 5 (césped sintético) en el Polideportivo Municipal, 1 de fútbol 11, 3 de básquet, 2 de vóley, 2 de tenis en el Parque Berduc y el gimnasio cerrado. Hoy las reservas se hacen por WhatsApp y libretas (Nahuel y Marcelo, encargado del Polideportivo). Problemas: doble reserva del mismo turno, imposibilidad de avisar suspensiones por lluvia, 30% de turnos reservados que no se usan sin aviso.
+
+Objetivo: que la gente vea qué hay libre y reserve sola, reciba recordatorio, cancele con un botón, y el día del turno muestre un QR que el encargado verifique en la puerta.
+
+## Funcionalidades
+
+### 1. Espacios
+- Listado de los 11 espacios con foto, deporte, superficie e indicador de luz nocturna.
+- Filtrar por deporte y por complejo.
+- Ficha: fotos, características, precio por hora, reglas del lugar.
+- Video corto opcional (20-30 s) recorriendo la cancha.
+- Mapa con la ubicación de cada complejo y "cómo llegar".
+
+### 2. Disponibilidad (pantalla más importante)
+- Elegir espacio y día; ver grilla de turnos de esa jornada.
+- Turnos de 1 hora, de 08:00 a 24:00. Estados visibles: libre, ocupado (reservado), fijo, mantenimiento (bloqueado).
+- Poder mirar los próximos 7 días.
+- Un turno pasado no se puede reservar aunque figure libre.
+- **Reservas fijas**: ocupan el mismo turno todas las semanas sin que nadie reserve cada vez (ej. grupo de los martes 21:00, clubes con horarios de entrenamiento). La grilla debe contemplarlas o mostrará libre lo que está tomado.
+
+### 3. Reservar y mis reservas
+- Reservar un turno libre en dos toques, indicando deporte y cantidad de personas.
+- Mis reservas: separadas en próximas y pasadas.
+- Cancelar: hasta 4 horas antes se cancela sola; después hay que avisar a la Dirección.
+- Marcar a quien cancela tarde repetidas veces (solo registrar, sin castigo todavía).
+- Máximo 3 reservas activas por persona.
+
+### 4. Ingreso el día del turno
+- La reserva muestra un código QR.
+- El encargado, desde su cuenta, lo escanea en la puerta y queda registrado que llegaron y a qué hora.
+- Si el código no corresponde a ese día o cancha, la app lo dice con claridad.
+- El encargado puede marcar un turno como "no se presentó".
+
+### 5. Recordatorios y avisos
+- Recordatorio 2 horas antes del turno.
+- Aviso si la Dirección suspende o mueve el turno (lluvia, mantenimiento).
+- Aviso cuando se libera un turno de un espacio marcado como favorito.
+
+### 6. Gestión (cuenta de encargado o administrador, misma app)
+- Bloquear turnos o días enteros por mantenimiento/lluvia, con motivo escrito.
+- Cargar y editar reservas fijas.
+- Ver la agenda del día de todos los espacios.
+- Escanear QR y marcar presentes/ausentes.
+- Cambiar el precio por hora de un espacio.
+
+## Requisitos de uso (importantes)
+- El QR se muestra en la puerta con mala señal: reserva y código **guardados en el teléfono y visibles sin conexión**.
+- Reservar debe ser más rápido que mandar un WhatsApp.
+- **No pedir cuenta para ver disponibilidad**; la cuenta se exige recién para reservar.
+- Si se niega la ubicación, todo sigue funcionando; la ubicación solo sirve para el mapa y para saber qué complejo está más cerca.
+- Uso nocturno y a la intemperie: buena legibilidad con poca luz y **modo oscuro**.
+- Sin cobro en la app: el turno se paga en el lugar; la app solo muestra el precio.
+- Android y iPhone, mayoría Android.
+
+## Fuera de alcance (v1)
+Pagos y señas online; torneos, fixtures y tablas; armado de equipos / búsqueda de jugadores; canchas privadas (solo municipales); alquiler de pecheras, pelotas, etc.
+
+## Forma de trabajo con el cliente
+- El cliente no programa: si algo no se puede o es muy caro, decírselo.
+- Preguntar antes, sobre todo por reservas fijas.
+- El documento tiene huecos: **avisar en vez de decidir por cuenta propia**.
+- Ante pedidos de cambio, informar qué se cae o qué se atrasa.
+- Mostrar algo temprano, aunque sea feo y con datos inventados.
+
+## Stack técnico
+
+| Qué | Con qué |
+|---|---|
+| Framework | React Native con Expo |
+| Lenguaje | TypeScript |
+| Navegación | Expo Router |
+| Estilos | `StyleSheet` (Unistyles o NativeWind opcionales) |
+| Entrega | Build de producción con EAS |
+
+### Capacidades del dispositivo
+
+| Capacidad | Paquete | Uso |
+|---|---|---|
+| Cámara | `expo-camera` (`CameraView`) | Encargado escanea QR |
+| Galería | `expo-image-picker` | Subir fotos del estado de una cancha |
+| Ubicación y mapa | `expo-location` + `react-native-maps` | Complejos en el mapa y cómo llegar |
+| Notificaciones | `expo-notifications` | Recordatorio y aviso de suspensión |
+| Persistencia y red | `expo-sqlite`, `expo-sqlite/kv-store`, `expo-network` | Reservas/QR offline, catálogo, sesión |
+| Seguridad | `expo-secure-store` + `expo-local-authentication` | Token de sesión; encargado reingresa con huella antes de escanear |
+| Sensores / háptica | `expo-haptics`, `expo-sensors` | Vibración distinta para ingreso válido e inválido |
+| Archivos | `expo-file-system` | Guardar video y fotos de cada cancha offline |
+| Multimedia | `expo-video` | Reproducir el recorrido en video |
+
+Correcciones a documentación vieja:
+- `expo-av` ya no existe: audio es `expo-audio`, video es `expo-video`.
+- La API vieja de `expo-file-system` falla en runtime: usar `File`, `Directory` y `Paths`.
+- Íconos: `@react-native-vector-icons/ionicons`, **no** `@expo/vector-icons`.
+
+## Datos / API
+
+La API la provee la cátedra más adelante. Hasta entonces, se construye contra datos inventados:
+- Tipos escritos una sola vez en `src/tipos/` (no se tocan cuando llegue la API).
+- Mocks en `src/mocks/`, tipados con esos tipos.
+- Ninguna pantalla importa el mock directamente: toda lectura/escritura pasa por servicios (`src/servicios/reservas.ts`) que hoy devuelven el mock y mañana hacen `fetch`.
+- Servicios **asíncronos desde el primer día**.
+- Los mocks deben incluir casos feos: día entero bloqueado por lluvia, grilla sin turnos libres, espacio sin video, reserva cancelada, fija que ocupa todos los martes, error de red.
+
+Forma de respuesta de la API:
+
+```json
+// éxito
+{ "datos": [ ], "meta": { "total": 11, "pagina": 1, "porPagina": 20 } }
+// error
+{ "error": { "codigo": "TURNO_OCUPADO", "mensaje": "Ese turno ya fue reservado." } }
+```
+
+Convenciones de datos (sin excepción):
+- Identificadores: cadenas de texto, no números.
+- Fechas y horas: ISO 8601 con zona. Día suelto sin hora: `"AAAA-MM-DD"`.
+- Claves en `camelCase`.
+- Campo sin valor: `null` (ni ausente ni cadena vacía).
+- Precios: números en pesos por hora.
+- Sesión: cabecera `Authorization: Bearer <token>`; token en `expo-secure-store`, **nunca** en kv-store.
+
+## Entidades (tipos)
+
+```ts
+export interface Coordenadas { latitud: number; longitud: number; }
+
+export interface Espacio {
+  id: string;               // "esp-02"
+  nombre: string;           // "Cancha 2 — Fútbol 5"
+  deporteId: string;        // "dep-futbol5"
+  complejo: string;         // "Polideportivo Municipal"
+  superficie: string;       // "césped sintético"
+  techado: boolean;
+  iluminacion: boolean;
+  capacidad: number;
+  precioPorHora: number;    // 12000
+  coordenadas: Coordenadas; // { latitud: -31.8642, longitud: -59.0281 }
+  imagenes: string[];
+  videoUrl: string | null;
+  reglas: string;
+  activo: boolean;
+}
+
+export interface Deporte {
+  id: string;     // "dep-futbol5"
+  nombre: string; // "Fútbol 5"
+  icono: string;  // "football-outline" (Ionicons)
+  color: string;  // "#2E7D32"
+}
+
+export type EstadoTurno = "libre" | "reservado" | "fijo" | "mantenimiento";
+
+// Una hora concreta de un espacio en un día concreto; es lo que dibuja la grilla.
+export interface Turno {
+  id: string;                    // "tur-0219-19"
+  espacioId: string;
+  fecha: string;                 // "AAAA-MM-DD"
+  inicio: string;                // "HH:MM"
+  fin: string;
+  estado: EstadoTurno;
+  reservaId: string | null;
+  motivoBloqueo: string | null;  // "Cancha anegada"
+  precio: number;
+}
+
+export type EstadoReserva = "confirmada" | "cancelada" | "cumplida" | "ausente";
+
+export interface Reserva {
+  id: string;                // "res-1180"
+  turnoId: string;
+  espacioId: string;
+  usuarioId: string;
+  cantidadPersonas: number;
+  codigoQr: string;          // "VGY-1180-0219-19"
+  estado: EstadoReserva;
+  ingresoEn: string | null;  // cuándo escaneó el encargado
+  creadaEn: string;          // ISO
+  cancelableHasta: string;   // ISO, 4 h antes del turno
+}
+
+export interface ReservaFija {
+  id: string;                          // "fij-07"
+  espacioId: string;
+  titular: string;                     // "Grupo de los martes"
+  dia: 0 | 1 | 2 | 3 | 4 | 5 | 6;      // 0 = domingo
+  inicio: string;
+  fin: string;
+  desde: string;                       // "AAAA-MM-DD"
+  hasta: string | null;                // null = sin fin
+  activa: boolean;
+}
+
+export type Rol = "jugador" | "encargado" | "administrador";
+
+export interface Usuario {
+  id: string;                    // "usr-207"
+  nombre: string;
+  email: string;
+  telefono: string;
+  rol: Rol;
+  espaciosFavoritos: string[];
+  cancelacionesTardias: number;
+  ausencias: number;
+}
+```
+
+**Turnos vs. fijas**: una reserva fija no es un turno, es una regla que ocupa el mismo turno cada semana. La grilla de un día se arma **cruzando** los turnos reservados con las fijas vigentes (`activa`, dentro de `desde`/`hasta`, mismo `dia`) y con los bloqueos de mantenimiento. Resolver bien este cruce es la parte difícil y decisiva del proyecto.
+
+## Wireframes de referencia
+
+Grilla de un espacio: encabezado `< Cancha 2 - Fútbol 5 [★favorito]`, selector de día `< Sábado 19 de septiembre >`, filas por hora con estado (`libre $ 12.000`, `OCUPADO`, `MANTENIMIENTO`, `FIJO - Grupo del martes`) y botón fijo "RESERVAR" abajo.
+
+Mi reserva: espacio, día y hora, complejo, "$ 12.000 - se paga en el lugar", QR de ingreso ("Mostraselo al encargado"), botones "Cómo llegar" y "Cancelar reserva" con leyenda "Se puede cancelar sin aviso hasta las HH:MM de hoy".

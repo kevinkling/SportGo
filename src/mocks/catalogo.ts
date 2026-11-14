@@ -1,4 +1,5 @@
-import { fechaISO, sumarDias } from '@/dominio/fechas';
+import { fechaISO, horaISO, sumarDias } from '@/dominio/fechas';
+import { idTurno } from '@/dominio/grilla';
 import type { Deporte, DiaBloqueado, Espacio, Reserva, ReservaFija, TurnoBloqueado, Usuario } from '@/tipos';
 
 const POLI = { latitud: -31.8642, longitud: -59.0281 };
@@ -90,7 +91,54 @@ export const usuarioPrueba: Usuario = {
   ausencias: 0,
 };
 
+export const encargadoPrueba: Usuario = {
+  id: 'usr-enc-1',
+  nombre: 'Marcelo Pérez',
+  email: 'marcelo@villaguay.gob.ar',
+  telefono: '3455-400100',
+  rol: 'encargado',
+  espaciosFavoritos: [],
+  cancelacionesTardias: 0,
+  ausencias: 0,
+};
+
+export const adminPrueba: Usuario = {
+  id: 'usr-adm-1',
+  nombre: 'Nahuel Ojeda',
+  email: 'nahuel@villaguay.gob.ar',
+  telefono: '3455-400200',
+  rol: 'administrador',
+  espaciosFavoritos: [],
+  cancelacionesTardias: 0,
+  ausencias: 0,
+};
+
+export const usuariosPrueba: Usuario[] = [usuarioPrueba, encargadoPrueba, adminPrueba];
+
 export const CLAVE_PRUEBA = '1234';
+
+export function buscarUsuarioPorEmail(email: string): Usuario | undefined {
+  return usuariosPrueba.find((u) => u.email === email.trim().toLowerCase());
+}
+
+export function reservaPuertaDemo(ahora = new Date()): Reserva {
+  const horaActual = Number(horaISO(ahora).slice(0, 2));
+  const fecha = horaActual >= 22 ? sumarDias(fechaISO(ahora), 1) : fechaISO(ahora);
+  const inicioHora = horaActual >= 22 ? 10 : Math.max(horaActual + 1, 10);
+  const inicio = `${String(inicioHora).padStart(2, '0')}:00`;
+  return {
+    id: 'res-demo-hoy',
+    turnoId: idTurno('esp-02', fecha, inicio),
+    espacioId: 'esp-02',
+    usuarioId: 'usr-207',
+    cantidadPersonas: 10,
+    codigoQr: 'VGY-DEMO-PUERTA',
+    estado: 'confirmada',
+    ingresoEn: null,
+    creadaEn: `${sumarDias(fecha, -2)}T18:00:00-03:00`,
+    cancelableHasta: `${fecha}T${String(inicioHora - 4).padStart(2, '0')}:00:00-03:00`,
+  };
+}
 
 export const fijas: ReservaFija[] = [
   {

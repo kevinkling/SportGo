@@ -33,6 +33,7 @@ function Navegacion() {
         }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="(gestion)" options={{ headerShown: false }} />
         <Stack.Screen name="ingresar" options={{ title: 'Entrar' }} />
         <Stack.Screen name="espacio" options={{ headerShown: false }} />
       </Stack>

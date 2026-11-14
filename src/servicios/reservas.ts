@@ -2,14 +2,11 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { cancelableHastaIso, armarGrilla, puedeSumarReserva, turnoReservable } from '@/dominio/grilla';
 import { isoConZona } from '@/dominio/fechas';
-import { diasBloqueadosHoy, espacios, fijas, turnosBloqueadosHoy } from '@/mocks/catalogo';
+import { espacios } from '@/mocks/catalogo';
+import { leerDiasBloqueados, leerFijas, leerPrecios, leerTurnosBloqueados } from '@/persistencia/gestion';
 import { esperar, fallo, ok } from '@/servicios/respuesta';
-import type { Reserva, Respuesta } from '@/tipos';
+import type { Aviso, Reserva, Respuesta } from '@/tipos';
 import type { ResultadoGrilla as Grilla } from '@/dominio/grilla';
-
-function filaAReserva(fila: Reserva): Reserva {
-  return fila;
-}
 
 export async function listarReservas(db: SQLiteDatabase, usuarioId: string): Promise<Respuesta<Reserva[]>> {
   await esperar();
@@ -17,7 +14,16 @@ export async function listarReservas(db: SQLiteDatabase, usuarioId: string): Pro
     'SELECT * FROM reservas WHERE usuarioId = ? ORDER BY creadaEn DESC',
     usuarioId,
   );
-  return ok(filas.map(filaAReserva));
+  return ok(filas);
+}
+
+export async function listarAvisos(db: SQLiteDatabase, usuarioId: string): Promise<Respuesta<Aviso[]>> {
+  await esperar();
+  const filas = await db.getAllAsync<Aviso>(
+    'SELECT * FROM avisos WHERE usuarioId = ? ORDER BY creadoEn DESC',
+    usuarioId,
+  );
+  return ok(filas);
 }
 
 export async function obtenerReserva(db: SQLiteDatabase, id: string): Promise<Respuesta<Reserva>> {
@@ -37,19 +43,22 @@ export async function obtenerGrilla(
   const espacio = espacios.find((e) => e.id === espacioId);
   if (!espacio) return fallo('NO_ENCONTRADO', 'Ese espacio no existe.');
 
-  const reservas = await db.getAllAsync<Reserva>(
-    "SELECT * FROM reservas WHERE espacioId = ? AND estado = 'confirmada'",
-    espacioId,
-  );
+  const [reservas, fijas, diasBloqueados, turnosBloqueados, precios] = await Promise.all([
+    db.getAllAsync<Reserva>("SELECT * FROM reservas WHERE espacioId = ? AND estado = 'confirmada'", espacioId),
+    leerFijas(db),
+    leerDiasBloqueados(db),
+    leerTurnosBloqueados(db),
+    leerPrecios(db),
+  ]);
 
   const resultado = armarGrilla({
     espacioId,
     fecha,
-    precio: espacio.precioPorHora,
+    precio: precios[espacioId] ?? espacio.precioPorHora,
     fijas,
     reservas,
-    diasBloqueados: diasBloqueadosHoy(ahora),
-    turnosBloqueados: turnosBloqueadosHoy(ahora),
+    diasBloqueados,
+    turnosBloqueados,
   });
 
   return ok(resultado);

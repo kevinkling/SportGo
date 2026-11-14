@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 import { useSesion } from '@/contexto/sesion';
 import { useTema } from '@/contexto/tema';
-import { ingresar } from '@/servicios/sesion';
+import { ingresar, puedeGestionar } from '@/servicios/sesion';
 import { esError } from '@/tipos';
 
 const esquema = z.object({
@@ -37,6 +37,10 @@ export default function IngresarScreen() {
       return;
     }
     setSesion(r.datos);
+    if (puedeGestionar(r.datos.usuario.rol)) {
+      router.replace('/(gestion)/agenda');
+      return;
+    }
     router.back();
   });
 
@@ -46,7 +50,7 @@ export default function IngresarScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={{ padding: 16, gap: 12 }}>
         <Text style={{ color: paleta.secundario, fontFamily: 'Manrope_400Regular' }}>
-          Usuario de prueba: emiliano@mail.com · clave 1234
+          Jugador: emiliano@mail.com · Encargado: marcelo@villaguay.gob.ar · Admin: nahuel@villaguay.gob.ar · clave 1234
         </Text>
         <Controller
           control={control}

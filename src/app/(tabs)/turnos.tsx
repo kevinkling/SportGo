@@ -44,7 +44,7 @@ export default function TurnosScreen() {
     setCarga(true);
     setError(null);
     const [esp, g, fav] = await Promise.all([
-      obtenerEspacio(espacioId),
+      obtenerEspacio(db, espacioId),
       obtenerGrilla(db, espacioId, dia),
       leerFavoritos(),
     ]);

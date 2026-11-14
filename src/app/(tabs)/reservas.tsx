@@ -12,8 +12,8 @@ import { useTema } from '@/contexto/tema';
 import { esCancelacionTardia, fechaDesdeTurnoId } from '@/dominio/grilla';
 import { tituloDia } from '@/dominio/fechas';
 import { listarEspacios } from '@/servicios/espacios';
-import { cancelarReserva, listarReservas } from '@/servicios/reservas';
-import { esError, type Espacio, type Reserva } from '@/tipos';
+import { cancelarReserva, listarAvisos, listarReservas } from '@/servicios/reservas';
+import { esError, type Aviso, type Espacio, type Reserva } from '@/tipos';
 
 export default function ReservasScreen() {
   const { paleta } = useTema();
@@ -23,6 +23,7 @@ export default function ReservasScreen() {
   const { sesion, lista } = useSesion();
   const [tab, setTab] = useState<'vienen' | 'pasaron'>('vienen');
   const [reservas, setReservas] = useState<Reserva[]>([]);
+  const [avisos, setAvisos] = useState<Aviso[]>([]);
   const [espacios, setEspacios] = useState<Espacio[]>([]);
   const [carga, setCarga] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,7 +34,11 @@ export default function ReservasScreen() {
       return;
     }
     setCarga(true);
-    const [r, e] = await Promise.all([listarReservas(db, sesion.usuario.id), listarEspacios()]);
+    const [r, e, a] = await Promise.all([
+      listarReservas(db, sesion.usuario.id),
+      listarEspacios(db),
+      listarAvisos(db, sesion.usuario.id),
+    ]);
     if (esError(r)) {
       setError(r.error.mensaje);
       setCarga(false);
@@ -46,6 +51,7 @@ export default function ReservasScreen() {
     }
     setReservas(r.datos);
     setEspacios(e.datos);
+    setAvisos(esError(a) ? [] : a.datos);
     setError(null);
     setCarga(false);
   }, [db, sesion]);
@@ -125,6 +131,15 @@ export default function ReservasScreen() {
       </View>
       {tab === 'vienen' ? (
         <>
+          {avisos.length > 0 ? (
+            <View style={{ paddingHorizontal: 16, gap: 8, marginBottom: 12 }}>
+              {avisos.map((av) => (
+                <Text key={av.id} style={{ color: paleta.lluvia, fontFamily: 'Manrope_600SemiBold' }}>
+                  {av.mensaje}
+                </Text>
+              ))}
+            </View>
+          ) : null}
           <Text style={estilos.muted}>{vienen.length} de 3 reservas activas</Text>
           {vienen.length === 0 ? (
             <View style={{ padding: 36, alignItems: 'center' }}>

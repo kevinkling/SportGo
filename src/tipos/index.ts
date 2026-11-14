@@ -84,6 +84,14 @@ export interface Usuario {
   ausencias: number;
 }
 
+export interface Aviso {
+  id: string;
+  usuarioId: string;
+  reservaId: string | null;
+  mensaje: string;
+  creadoEn: string;
+}
+
 export interface DiaBloqueado {
   espacioId: string;
   fecha: string;

@@ -43,7 +43,7 @@ export default function EspaciosScreen() {
     setError(null);
     const [d, e, fav, fotos] = await Promise.all([
       listarDeportes(),
-      listarEspacios(),
+      listarEspacios(db),
       leerFavoritos(),
       portadasDeEspacios(db),
     ]);
