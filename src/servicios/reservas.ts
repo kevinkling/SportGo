@@ -1,9 +1,10 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { cancelableHastaIso, armarGrilla, puedeSumarReserva, turnoReservable } from '@/dominio/grilla';
+import { cancelableHastaIso, armarGrilla, fechaDesdeTurnoId, horaDesdeTurnoId, puedeSumarReserva, turnoReservable } from '@/dominio/grilla';
 import { isoConZona } from '@/dominio/fechas';
 import { espacios } from '@/mocks/catalogo';
 import { leerDiasBloqueados, leerFijas, leerPrecios, leerTurnosBloqueados } from '@/persistencia/gestion';
+import { cancelarRecordatorio, emitirEventoDisponibilidad, programarRecordatorio } from '@/servicios/notificaciones';
 import { esperar, fallo, ok } from '@/servicios/respuesta';
 import type { Aviso, Reserva, Respuesta } from '@/tipos';
 import type { ResultadoGrilla as Grilla } from '@/dominio/grilla';
@@ -125,6 +126,13 @@ export async function crearReserva(
     reserva.cancelableHasta,
   );
 
+  await programarRecordatorio({
+    reservaId: reserva.id,
+    espacioNombre: espacio.nombre,
+    fecha: entrada.fecha,
+    inicio: entrada.inicio,
+  });
+
   return ok(reserva);
 }
 
@@ -140,5 +148,11 @@ export async function cancelarReserva(
     return fallo('ESTADO', 'Esa reserva ya no se puede cancelar.');
   }
   await db.runAsync("UPDATE reservas SET estado = 'cancelada' WHERE id = ?", id);
+  await cancelarRecordatorio(id);
+  const fecha = fechaDesdeTurnoId(fila.turnoId);
+  const inicio = horaDesdeTurnoId(fila.turnoId);
+  if (fecha && inicio) {
+    await emitirEventoDisponibilidad({ espacioId: fila.espacioId, fecha, inicio });
+  }
   return ok({ ...fila, estado: 'cancelada' });
 }

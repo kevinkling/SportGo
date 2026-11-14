@@ -8,6 +8,7 @@ import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { OyenteNotificaciones } from '@/components/OyenteNotificaciones';
 import { SplashInicio } from '@/components/SplashInicio';
 import { FlujoProvider } from '@/contexto/flujo';
 import { SesionProvider } from '@/contexto/sesion';
@@ -55,6 +56,7 @@ export default function RootLayout() {
         <TemaProvider>
           <SesionProvider>
             <FlujoProvider>
+              <OyenteNotificaciones />
               <Navegacion />
             </FlujoProvider>
           </SesionProvider>

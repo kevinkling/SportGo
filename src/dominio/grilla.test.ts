@@ -1,4 +1,12 @@
-import { armarGrilla, esCancelacionTardia, faseTurno, puedeSumarReserva, turnoReservable } from '@/dominio/grilla';
+import {
+  armarGrilla,
+  esCancelacionTardia,
+  faseTurno,
+  fechaDesdeTurnoId,
+  horaDesdeTurnoId,
+  puedeSumarReserva,
+  turnoReservable,
+} from '@/dominio/grilla';
 import type { Reserva, ReservaFija } from '@/tipos';
 
 const fijas: ReservaFija[] = [
@@ -63,6 +71,13 @@ describe('armarGrilla', () => {
     const ahora = new Date('2026-11-08T16:40:00-03:00');
     expect(t && turnoReservable(t, ahora)).toBe(false);
     expect(t && faseTurno(t.fecha, t.inicio, t.fin, ahora)).toBe('paso');
+  });
+});
+
+describe('turnoId', () => {
+  it('saca fecha y hora', () => {
+    expect(fechaDesdeTurnoId('tur-0220261114-19')).toBe('2026-11-14');
+    expect(horaDesdeTurnoId('tur-0220261114-19')).toBe('19:00');
   });
 });
 

@@ -19,6 +19,12 @@ export function fechaDesdeTurnoId(turnoId: string): string | null {
   return `${m[1]}-${m[2]}-${m[3]}`;
 }
 
+export function horaDesdeTurnoId(turnoId: string): string | null {
+  const m = turnoId.match(/^tur-\d{2}\d{8}-(\d{2})$/);
+  if (!m) return null;
+  return `${m[1]}:00`;
+}
+
 export type FaseTurno = 'paso' | 'curso' | 'futuro';
 
 export function faseTurno(fecha: string, inicio: string, fin: string, ahora: Date): FaseTurno {

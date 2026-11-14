@@ -5,6 +5,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BotonSesion } from '@/components/BotonSesion';
+import { PreferenciasAvisos } from '@/components/PreferenciasAvisos';
 import { QrMuestra } from '@/components/QrMuestra';
 import { peso } from '@/constants/tema';
 import { useSesion } from '@/contexto/sesion';
@@ -121,6 +122,7 @@ export default function ReservasScreen() {
         <Text style={estilos.titulo}>Reservas</Text>
         <BotonSesion />
       </View>
+      <PreferenciasAvisos reservas={vienen} />
       <View style={estilos.seg}>
         <Pressable onPress={() => setTab('vienen')} style={[estilos.segBtn, tab === 'vienen' && estilos.segOn]}>
           <Text style={{ color: tab === 'vienen' ? paleta.fondo : paleta.secundario, fontFamily: 'Manrope_700Bold' }}>Vienen</Text>

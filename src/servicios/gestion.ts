@@ -1,8 +1,8 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { isoConZona } from '@/dominio/fechas';
+import { fechaISO, isoConZona } from '@/dominio/fechas';
 import { expandirFranja, solapaFija, type FranjaFija } from '@/dominio/fijas';
-import { armarGrilla, fechaDesdeTurnoId, HORAS, idTurno } from '@/dominio/grilla';
+import { armarGrilla, fechaDesdeTurnoId, horaDesdeTurnoId, HORAS, idTurno } from '@/dominio/grilla';
 import { evaluarIngreso } from '@/dominio/ingreso';
 import { espacios } from '@/mocks/catalogo';
 import {
@@ -12,7 +12,7 @@ import {
   leerPrecios,
   leerTurnosBloqueados,
 } from '@/persistencia/gestion';
-import { avisarSuspension } from '@/servicios/notificaciones';
+import { avisarSuspensionReserva, emitirEventoDisponibilidad } from '@/servicios/notificaciones';
 import { esperar, fallo, ok } from '@/servicios/respuesta';
 import type {
   DiaBloqueado,
@@ -52,6 +52,9 @@ async function suspenderReservas(
 ) {
   for (const r of afectadas) {
     await db.runAsync("UPDATE reservas SET estado = 'cancelada' WHERE id = ?", r.id);
+    const fecha = fechaDesdeTurnoId(r.turnoId);
+    const inicio = horaDesdeTurnoId(r.turnoId) ?? '';
+    const espacio = espacios.find((e) => e.id === r.espacioId);
     const aviso = {
       id: `avi-${Date.now()}-${r.id}`,
       usuarioId: r.usuarioId,
@@ -60,9 +63,13 @@ async function suspenderReservas(
       creadoEn: isoConZona(ahora),
     };
     await insertarAviso(db, aviso);
-  }
-  if (afectadas.length > 0) {
-    await avisarSuspension('Turno suspendido', `Se canceló por: ${motivo}`);
+    await avisarSuspensionReserva({
+      reservaId: r.id,
+      espacioNombre: espacio?.nombre ?? r.espacioId,
+      fecha: fecha ?? fechaISO(ahora),
+      inicio: inicio || '—',
+      motivo,
+    });
   }
 }
 
@@ -187,6 +194,7 @@ export async function desbloquearDia(
   const no = exigeGestion(rol);
   if (no) return no;
   await db.runAsync('DELETE FROM dias_bloqueados WHERE espacioId = ? AND fecha = ?', espacioId, fecha);
+  await emitirEventoDisponibilidad({ espacioId, fecha, inicio: null });
   return ok({ ok: true });
 }
 
@@ -240,6 +248,7 @@ export async function desbloquearTurno(
     fecha,
     inicio,
   );
+  await emitirEventoDisponibilidad({ espacioId, fecha, inicio });
   return ok({ ok: true });
 }
 
