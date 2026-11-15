@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2023"],
+    "types": ["node"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/dominio/*": ["../src/dominio/*"],
+      "@/tipos": ["../src/tipos/index.ts"],
+      "@react-native-vector-icons/ionicons": ["./src/tipos/ionicons.d.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "scripts/**/*.ts", "../src/dominio/**/*.ts", "../src/tipos/index.ts"],
+  "exclude": ["../src/dominio/**/*.test.ts"]
+}

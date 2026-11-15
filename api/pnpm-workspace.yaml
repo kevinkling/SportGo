@@ -1,0 +1,4 @@
+# Marca api/ como su propia raíz de pnpm: así se instala aparte de la app
+# (en Render, root directory = api) sin mirar el pnpm-workspace.yaml de arriba.
+allowBuilds:
+  esbuild: true
