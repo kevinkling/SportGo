@@ -1,5 +1,4 @@
-import type { ComponentProps } from 'react';
-import type Ionicons from '@expo/vector-icons/Ionicons';
+import type { IoniconsIconName } from '@react-native-vector-icons/ionicons';
 
 export interface Coordenadas {
   latitud: number;
@@ -26,7 +25,7 @@ export interface Espacio {
 export interface Deporte {
   id: string;
   nombre: string;
-  icono: ComponentProps<typeof Ionicons>['name'];
+  icono: IoniconsIconName;
   color: string;
 }
 

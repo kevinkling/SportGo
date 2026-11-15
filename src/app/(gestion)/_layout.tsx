@@ -1,4 +1,4 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
+import Ionicons from '@react-native-vector-icons/ionicons';
 import { Redirect, Tabs } from 'expo-router';
 
 import { useSesion } from '@/contexto/sesion';
