@@ -1,54 +1,58 @@
+import { useMemo } from 'react';
 import { View } from 'react-native';
+
+import { matrizQr } from '@/dominio/qr';
 
 interface QrMuestraProps {
   codigo: string;
   size?: number;
 }
 
+/** Margen blanco alrededor, en módulos. El estándar pide 4: sin él muchos lectores no encuentran el código. */
+const MARGEN = 4;
+
 export function QrMuestra({ codigo, size = 180 }: QrMuestraProps) {
-  const n = 21;
-  const celda = size / n;
-  let h = 0;
-  for (const ch of codigo) h = (h * 33 + ch.charCodeAt(0)) >>> 0;
+  const matriz = useMemo(() => matrizQr(codigo), [codigo]);
+  const total = matriz.length + 2 * MARGEN;
+  // Módulos de un número entero de píxeles: con medidas fraccionarias quedan
+  // líneas finas entre cuadros que confunden al lector.
+  const celda = Math.max(1, Math.floor(size / total));
+  const lado = celda * total;
 
-  const celdas: { x: number; y: number }[] = [];
-  const finder = (r: number, c: number) => {
-    for (let y = 0; y < 7; y++) {
-      for (let x = 0; x < 7; x++) {
-        const borde = y === 0 || x === 0 || y === 6 || x === 6;
-        const nucleo = y >= 2 && y <= 4 && x >= 2 && x <= 4;
-        if (borde || nucleo) celdas.push({ x: c + x, y: r + y });
+  // Cada fila se dibuja como tramos de módulos oscuros seguidos, no uno por uno:
+  // un QR de 25×25 baja de ~300 vistas a unas 100.
+  const tramos = useMemo(() => {
+    const salida: { fila: number; desde: number; largo: number }[] = [];
+    matriz.forEach((fila, y) => {
+      let x = 0;
+      while (x < fila.length) {
+        if (!fila[x]) {
+          x++;
+          continue;
+        }
+        const desde = x;
+        while (x < fila.length && fila[x]) x++;
+        salida.push({ fila: y, desde, largo: x - desde });
       }
-    }
-  };
-  finder(0, 0);
-  finder(0, 14);
-  finder(14, 0);
-
-  for (let y = 0; y < n; y++) {
-    for (let x = 0; x < n; x++) {
-      const enBuscador = (y < 8 && x < 8) || (y < 8 && x > 12) || (y > 12 && x < 8);
-      if (enBuscador) continue;
-      h = (h * 1664525 + 1013904223) >>> 0;
-      if ((h >>> 28) & 1) celdas.push({ x, y });
-    }
-  }
+    });
+    return salida;
+  }, [matriz]);
 
   return (
     <View
       accessible
       accessibilityLabel={`Código QR de la reserva ${codigo}`}
-      style={{ width: size, height: size, backgroundColor: '#fff' }}>
-      {celdas.map((c, i) => (
+      style={{ width: lado, height: lado, backgroundColor: '#fff' }}>
+      {tramos.map((t) => (
         <View
-          key={`${c.x}-${c.y}-${i}`}
+          key={`${t.fila}-${t.desde}`}
           style={{
             position: 'absolute',
-            left: c.x * celda,
-            top: c.y * celda,
-            width: celda,
+            left: (t.desde + MARGEN) * celda,
+            top: (t.fila + MARGEN) * celda,
+            width: t.largo * celda,
             height: celda,
-            backgroundColor: '#14120e',
+            backgroundColor: '#000',
           }}
         />
       ))}
