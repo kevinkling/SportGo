@@ -2,17 +2,18 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { AppState, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BotonSesion } from '@/components/BotonSesion';
 import { useSesion } from '@/contexto/sesion';
 import { useTema } from '@/contexto/tema';
+import { confirmarIdentidad } from '@/servicios/biometria';
 import { validarIngreso } from '@/servicios/gestion';
 import { esError } from '@/tipos';
 
-// Código de mentira para la demo (reemplaza la biometría del teléfono).
+// Alternativa a la huella (teléfono sin sensor o huella cancelada). Código fijo de la demo.
 const PIN_ENCARGADO = '1234';
 
 export default function EscanearScreen() {
@@ -26,7 +27,20 @@ export default function EscanearScreen() {
   const [manual, setManual] = useState('');
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState(false);
+  const [sinSensor, setSinSensor] = useState(false);
   const [resultado, setResultado] = useState<{ ok: boolean; titulo: string; detalle: string } | null>(null);
+
+  // Evita pedir la huella dos veces: el diálogo del sistema también mueve el AppState.
+  const autenticando = useRef(false);
+
+  const pedirHuella = useCallback(async () => {
+    if (autenticando.current) return;
+    autenticando.current = true;
+    const r = await confirmarIdentidad('Confirmá que sos el encargado para escanear');
+    autenticando.current = false;
+    setSinSensor(r === 'no_disponible');
+    if (r === 'ok') setListo(true);
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -35,14 +49,19 @@ export default function EscanearScreen() {
       setListo(false);
       setPin('');
       setPinError(false);
+      void pedirHuella();
+      let anterior = AppState.currentState;
       const sub = AppState.addEventListener('change', (estado) => {
         if (estado === 'background') setListo(false);
+        // Al reabrir la app desde segundo plano se vuelve a pedir la huella.
+        if (estado === 'active' && anterior === 'background') void pedirHuella();
+        anterior = estado;
       });
       return () => {
         setListo(false);
         sub.remove();
       };
-    }, []),
+    }, [pedirHuella]),
   );
 
   function validarPin() {
@@ -77,7 +96,11 @@ export default function EscanearScreen() {
   if (!listo) {
     return (
       <View style={[estilos.pantalla, { paddingTop: insets.top + 16 }]}>
-        <Text style={estilos.muted}>Ingresá el código de encargado para escanear.</Text>
+        <Text style={estilos.muted}>
+          {sinSensor
+            ? 'Este teléfono no tiene huella cargada. Ingresá el código de encargado para escanear.'
+            : 'Confirmá con tu huella o ingresá el código de encargado para escanear.'}
+        </Text>
         <TextInput
           value={pin}
           onChangeText={setPin}
@@ -93,6 +116,13 @@ export default function EscanearScreen() {
         <Pressable onPress={validarPin} style={[estilos.cta, { marginHorizontal: 16 }]}>
           <Text style={estilos.ctaTexto}>Entrar</Text>
         </Pressable>
+        {!sinSensor ? (
+          <Pressable
+            onPress={() => void pedirHuella()}
+            style={[estilos.cta, estilos.ctaSecundario, { marginHorizontal: 16 }]}>
+            <Text style={[estilos.ctaTexto, { color: paleta.texto }]}>Usar huella</Text>
+          </Pressable>
+        ) : null}
       </View>
     );
   }
@@ -160,6 +190,7 @@ function crear(paleta: ReturnType<typeof useTema>['paleta']) {
     muted: { fontFamily: 'Manrope_400Regular', color: paleta.secundario, fontSize: 13, paddingHorizontal: 16 },
     cta: { minHeight: 48, borderRadius: 14, backgroundColor: paleta.cta, alignItems: 'center', justifyContent: 'center' },
     ctaTexto: { color: paleta.ctaTexto, fontFamily: 'Manrope_700Bold' },
+    ctaSecundario: { backgroundColor: 'transparent', borderWidth: 1, borderColor: paleta.linea, marginTop: 8 },
     input: {
       margin: 16,
       minHeight: 48,
