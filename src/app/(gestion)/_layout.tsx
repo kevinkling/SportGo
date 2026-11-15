@@ -32,35 +32,35 @@ export default function GestionLayout() {
         name="agenda"
         options={{
           title: 'Agenda',
-          tabBarIcon: ({ color }) => <Ionicons name="clipboard-outline" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="clipboard-outline" size={22} color={color as string} />,
         }}
       />
       <Tabs.Screen
         name="escanear"
         options={{
           title: 'QR',
-          tabBarIcon: ({ color }) => <Ionicons name="qr-code-outline" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="qr-code-outline" size={22} color={color as string} />,
         }}
       />
       <Tabs.Screen
         name="bloqueos"
         options={{
           title: 'Bloqueos',
-          tabBarIcon: ({ color }) => <Ionicons name="rainy-outline" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="rainy-outline" size={22} color={color as string} />,
         }}
       />
       <Tabs.Screen
         name="fijas"
         options={{
           title: 'Fijas',
-          tabBarIcon: ({ color }) => <Ionicons name="repeat-outline" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="repeat-outline" size={22} color={color as string} />,
         }}
       />
       <Tabs.Screen
         name="precios"
         options={{
           title: 'Precios',
-          tabBarIcon: ({ color }) => <Ionicons name="cash-outline" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="cash-outline" size={22} color={color as string} />,
         }}
       />
     </Tabs>

@@ -22,21 +22,21 @@ export default function TabsLayout() {
         name="espacios"
         options={{
           title: 'Espacios',
-          tabBarIcon: ({ color }) => <Ionicons name="grid-outline" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="grid-outline" size={22} color={color as string} />,
         }}
       />
       <Tabs.Screen
         name="turnos"
         options={{
           title: 'Turnos',
-          tabBarIcon: ({ color }) => <Ionicons name="calendar-outline" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="calendar-outline" size={22} color={color as string} />,
         }}
       />
       <Tabs.Screen
         name="reservas"
         options={{
           title: 'Reservas',
-          tabBarIcon: ({ color }) => <Ionicons name="ticket-outline" size={22} color={color} />,
+          tabBarIcon: ({ color }) => <Ionicons name="ticket-outline" size={22} color={color as string} />,
         }}
       />
     </Tabs>

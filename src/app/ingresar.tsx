@@ -91,7 +91,7 @@ export default function IngresarScreen() {
           )}
         />
         {errors.clave ? <Text style={err(paleta)}>{errors.clave.message}</Text> : null}
-        <Pressable disabled={isSubmitting} onPress={onSubmit} style={cta(paleta)}>
+        <Pressable disabled={isSubmitting} onPress={() => onSubmit()} style={cta(paleta)}>
           <Text style={{ color: paleta.ctaTexto, fontFamily: 'Manrope_700Bold' }}>
             {isSubmitting ? 'Entrando…' : 'Entrar'}
           </Text>
