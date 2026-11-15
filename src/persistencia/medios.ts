@@ -1,42 +1,68 @@
-import { Asset } from 'expo-asset';
 import { Directory, File, Paths } from 'expo-file-system';
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { fotosBundle, videosBundle } from '@/mocks/medios';
+import type { Espacio } from '@/tipos';
 
-async function copiarAlDocumento(modulo: number, carpeta: Directory, nombre: string): Promise<string> {
-  const asset = Asset.fromModule(modulo);
-  await asset.downloadAsync();
-  if (!asset.localUri) throw new Error(`No se pudo leer ${nombre}`);
-  const destino = new File(carpeta, nombre);
-  if (!destino.exists) {
-    new File(asset.localUri).copy(destino);
-  }
-  return destino.uri;
+function carpeta(nombre: string): Directory {
+  const dir = new Directory(Paths.document, nombre);
+  dir.create({ idempotent: true });
+  return dir;
 }
 
-export async function sembrarMedios(db: SQLiteDatabase) {
-  const fotosDir = new Directory(Paths.document, 'espacios');
-  if (!fotosDir.exists) fotosDir.create();
-  const videosDir = new Directory(Paths.document, 'videos');
-  if (!videosDir.exists) videosDir.create();
+/** El nombre del archivo es el último tramo de la URL: "…/fotos/esp-02-1.jpg". */
+function nombreDe(url: string): string {
+  return url.split('/').pop() ?? url;
+}
 
-  const fotos = await db.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM fotos_espacio');
-  if (!fotos || fotos.c === 0) {
-    for (const [espacioId, modulos] of Object.entries(fotosBundle)) {
-      for (let i = 0; i < modulos.length; i++) {
-        const nombre = `${espacioId}-${i + 1}.jpg`;
-        const ruta = await copiarAlDocumento(modulos[i], fotosDir, nombre);
-        await db.runAsync('INSERT INTO fotos_espacio (espacioId, orden, ruta) VALUES (?, ?, ?)', espacioId, i, ruta);
+/** Baja el archivo a `dir` si todavía no está; devuelve la ruta local o null si falló. */
+async function asegurarArchivo(url: string, dir: Directory): Promise<string | null> {
+  const destino = new File(dir, nombreDe(url));
+  if (destino.exists) return destino.uri;
+  try {
+    const bajado = await File.downloadFileAsync(url, dir);
+    return bajado.uri;
+  } catch {
+    // Sin señal o servidor caído: se vuelve a intentar la próxima vez que se listen.
+    return null;
+  }
+}
+
+let enCurso: Promise<void> | null = null;
+
+/**
+ * Descarga al teléfono las fotos y el video de cada espacio (API nueva de
+ * expo-file-system: File, Directory, Paths) y anota la ruta local en SQLite.
+ * Así la galería y el recorrido se ven sin datos, como pide el PRD.
+ *
+ * Se llama sin esperar: la pantalla no se frena por esto. Si ya hay una
+ * descarga andando, se reusa en vez de arrancar otra.
+ */
+export function descargarMedios(db: SQLiteDatabase, espacios: Espacio[]): Promise<void> {
+  if (enCurso) return enCurso;
+  enCurso = (async () => {
+    const fotos = carpeta('espacios');
+    const videos = carpeta('videos');
+    for (const espacio of espacios) {
+      for (let i = 0; i < espacio.imagenes.length; i++) {
+        const ruta = await asegurarArchivo(espacio.imagenes[i], fotos);
+        if (ruta) {
+          await db.runAsync(
+            'INSERT OR REPLACE INTO fotos_espacio (espacioId, orden, ruta) VALUES (?, ?, ?)',
+            espacio.id,
+            i,
+            ruta,
+          );
+        }
+      }
+      if (espacio.videoUrl) {
+        const ruta = await asegurarArchivo(espacio.videoUrl, videos);
+        if (ruta) {
+          await db.runAsync('INSERT OR REPLACE INTO videos_espacio (espacioId, ruta) VALUES (?, ?)', espacio.id, ruta);
+        }
       }
     }
-  }
-
-  const videos = await db.getFirstAsync<{ c: number }>('SELECT COUNT(*) as c FROM videos_espacio');
-  if (!videos || videos.c === 0) {
-    for (const [espacioId, modulo] of Object.entries(videosBundle)) {
-      const ruta = await copiarAlDocumento(modulo, videosDir, `${espacioId}.mp4`);
-      await db.runAsync('INSERT INTO videos_espacio (espacioId, ruta) VALUES (?, ?)', espacioId, ruta);
-    }
-  }
+  })().finally(() => {
+    enCurso = null;
+  });
+  return enCurso;
 }

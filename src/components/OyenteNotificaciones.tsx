@@ -2,16 +2,19 @@ import * as Notifications from 'expo-notifications';
 import { useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useRef } from 'react';
+import { AppState } from 'react-native';
 
 import { useFlujo } from '@/contexto/flujo';
 import { useSesion } from '@/contexto/sesion';
 import {
   configurarNotificaciones,
   datosDeRespuesta,
+  notificarAvisosNuevos,
   reprogramarRecordatorios,
   type DatosNotificacion,
 } from '@/servicios/notificaciones';
-import { listarReservas } from '@/servicios/reservas';
+import { sincronizarFavoritos } from '@/servicios/favoritos';
+import { listarAvisos, listarReservas } from '@/servicios/reservas';
 import { esError } from '@/tipos';
 
 export function OyenteNotificaciones() {
@@ -27,9 +30,26 @@ export function OyenteNotificaciones() {
 
   useEffect(() => {
     if (!sesion) return;
-    void listarReservas(db, sesion.usuario.id).then((r) => {
-      if (!esError(r)) void reprogramarRecordatorios(r.datos);
+    const usuarioId = sesion.usuario.id;
+
+    void sincronizarFavoritos();
+    void listarReservas(db, usuarioId).then((r) => {
+      if (!esError(r)) void reprogramarRecordatorios(db, r.datos);
     });
+
+    // Un turno suspendido por la gestión llega como aviso del servidor: se busca
+    // al abrir la app y cada vez que vuelve a primer plano, y cada aviso nuevo
+    // dispara su notificación local.
+    function buscarAvisos() {
+      void listarAvisos(db, usuarioId).then((r) => {
+        if (!esError(r)) void notificarAvisosNuevos(r.datos);
+      });
+    }
+    buscarAvisos();
+    const sub = AppState.addEventListener('change', (estado) => {
+      if (estado === 'active') buscarAvisos();
+    });
+    return () => sub.remove();
   }, [db, sesion]);
 
   useEffect(() => {

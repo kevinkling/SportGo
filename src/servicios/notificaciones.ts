@@ -1,13 +1,14 @@
-import Storage from 'expo-sqlite/kv-store';
 import * as Notifications from 'expo-notifications';
+import type { SQLiteDatabase } from 'expo-sqlite';
+import Storage from 'expo-sqlite/kv-store';
 import { Platform } from 'react-native';
 
 import { instanteTurno, tituloDia } from '@/dominio/fechas';
 import { fechaDesdeTurnoId, horaDesdeTurnoId } from '@/dominio/grilla';
 import { calcularMomentoRecordatorio } from '@/dominio/recordatorio';
-import { espacios } from '@/mocks/catalogo';
+import { leerCache } from '@/persistencia/cache';
 import { leerFavoritos } from '@/servicios/favoritos';
-import type { Reserva } from '@/tipos';
+import type { Aviso, Espacio, Reserva } from '@/tipos';
 
 export const CANAL_RECORDATORIOS = 'recordatorios';
 export const CANAL_AVISOS = 'avisos';
@@ -31,6 +32,7 @@ export interface DatosNotificacion {
 
 export interface EventoDisponibilidad {
   espacioId: string;
+  espacioNombre: string;
   fecha: string;
   /** null = se liberó el día entero */
   inicio: string | null;
@@ -202,12 +204,13 @@ async function cancelarTodosLosRecordatorios() {
   }
 }
 
-export async function reprogramarRecordatorios(reservas: Reserva[]) {
+export async function reprogramarRecordatorios(db: SQLiteDatabase, reservas: Reserva[]) {
   const prefs = await leerPreferenciasNotif();
   if (!prefs.recordatorios) {
     await cancelarTodosLosRecordatorios();
     return;
   }
+  const espacios = (await leerCache<Espacio[]>(db, 'espacios')) ?? [];
   for (const r of reservas) {
     if (r.estado !== 'confirmada') continue;
     const fecha = fechaDesdeTurnoId(r.turnoId);
@@ -223,23 +226,36 @@ export async function reprogramarRecordatorios(reservas: Reserva[]) {
   }
 }
 
-export async function avisarSuspensionReserva(entrada: {
-  reservaId: string;
-  espacioNombre: string;
-  fecha: string;
-  inicio: string;
-  motivo: string;
-}) {
-  await cancelarRecordatorio(entrada.reservaId);
-  await mostrarInmediata({
-    canal: CANAL_AVISOS,
-    titulo: 'Turno suspendido',
-    mensaje: `${entrada.espacioNombre}, ${tituloDia(entrada.fecha)} ${entrada.inicio}. ${entrada.motivo}`,
-    data: { tipo: 'suspension', reservaId: entrada.reservaId },
-  });
+const CLAVE_AVISOS_VISTOS = 'sportgo.avisos.vistos';
+const UN_DIA_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Cuando la gestión suspende un turno (lluvia, mantenimiento) el servidor deja un
+ * aviso. Al abrir la app o volver a ella se traen los avisos y cada uno nuevo
+ * dispara esta notificación local, una sola vez. Los de más de un día se ignoran:
+ * en una instalación recién hecha no tiene sentido avisar de algo viejo.
+ */
+export async function notificarAvisosNuevos(avisos: Aviso[]) {
+  const crudo = await Storage.getItem(CLAVE_AVISOS_VISTOS);
+  const vistos = new Set<string>(crudo ? (JSON.parse(crudo) as string[]) : []);
+  const nuevos = avisos.filter(
+    (a) => !vistos.has(a.id) && Date.now() - Date.parse(a.creadoEn) < UN_DIA_MS,
+  );
+  for (const aviso of nuevos) {
+    if (aviso.reservaId) await cancelarRecordatorio(aviso.reservaId);
+    await mostrarInmediata({
+      canal: CANAL_AVISOS,
+      titulo: 'Turno suspendido',
+      mensaje: aviso.mensaje,
+      data: { tipo: 'suspension', reservaId: aviso.reservaId ?? undefined },
+    });
+  }
+  if (avisos.length > 0) {
+    await Storage.setItem(CLAVE_AVISOS_VISTOS, JSON.stringify([...vistos, ...avisos.map((a) => a.id)]));
+  }
 }
 
-/** Punto de enganche: hoy dispara local; cuando haya API se cambia por push remoto. */
+/** Aviso local de que se liberó un turno de un espacio favorito. Lo dispara `obtenerGrilla` al ver el cambio. */
 export async function emitirEventoDisponibilidad(evento: EventoDisponibilidad) {
   const prefs = await leerPreferenciasNotif();
   if (!prefs.favoritos) return;
@@ -249,8 +265,7 @@ export async function emitirEventoDisponibilidad(evento: EventoDisponibilidad) {
     const inicio = instanteTurno(evento.fecha, evento.inicio);
     if (inicio.getTime() <= Date.now()) return;
   }
-  const espacio = espacios.find((e) => e.id === evento.espacioId);
-  const nombre = espacio?.nombre ?? evento.espacioId;
+  const nombre = evento.espacioNombre;
   const mensaje = evento.inicio
     ? `Se liberó el turno de las ${evento.inicio} en ${nombre}.`
     : `Se liberó ${tituloDia(evento.fecha)} en ${nombre}.`;
@@ -259,16 +274,6 @@ export async function emitirEventoDisponibilidad(evento: EventoDisponibilidad) {
     titulo: 'Turno libre',
     mensaje,
     data: { tipo: 'favorito', espacioId: evento.espacioId, fecha: evento.fecha },
-  });
-}
-
-/** Conservado para llamadas viejas; preferí `avisarSuspensionReserva`. */
-export async function avisarSuspension(titulo: string, mensaje: string) {
-  await mostrarInmediata({
-    canal: CANAL_AVISOS,
-    titulo,
-    mensaje,
-    data: { tipo: 'suspension' },
   });
 }
 

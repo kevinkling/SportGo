@@ -50,7 +50,7 @@ export default function FichaEspacio() {
       setCarga(true);
       const [esp, deps, rutas, vid] = await Promise.all([
         obtenerEspacio(db, id),
-        listarDeportes(),
+        listarDeportes(db),
         fotosDeEspacio(db, id),
         videoDeEspacio(db, id),
       ]);

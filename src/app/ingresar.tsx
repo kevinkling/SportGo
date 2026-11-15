@@ -1,9 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { z } from 'zod';
 
+import { estiloBoton, estiloCampo, estiloError } from '@/constants/formulario';
 import { useSesion } from '@/contexto/sesion';
 import { useTema } from '@/contexto/tema';
 import { ingresar, puedeGestionar } from '@/servicios/sesion';
@@ -70,11 +71,11 @@ export default function IngresarScreen() {
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
-              style={input(paleta)}
+              style={estiloCampo(paleta)}
             />
           )}
         />
-        {errors.email ? <Text style={err(paleta)}>{errors.email.message}</Text> : null}
+        {errors.email ? <Text style={estiloError(paleta)}>{errors.email.message}</Text> : null}
         <Controller
           control={control}
           name="clave"
@@ -86,44 +87,22 @@ export default function IngresarScreen() {
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
-              style={input(paleta)}
+              style={estiloCampo(paleta)}
             />
           )}
         />
-        {errors.clave ? <Text style={err(paleta)}>{errors.clave.message}</Text> : null}
-        <Pressable disabled={isSubmitting} onPress={() => onSubmit()} style={cta(paleta)}>
+        {errors.clave ? <Text style={estiloError(paleta)}>{errors.clave.message}</Text> : null}
+        <Pressable disabled={isSubmitting} onPress={() => onSubmit()} style={estiloBoton(paleta)}>
           <Text style={{ color: paleta.ctaTexto, fontFamily: 'Manrope_700Bold' }}>
             {isSubmitting ? 'Entrando…' : 'Entrar'}
           </Text>
         </Pressable>
+        <Link
+          href={{ pathname: '/registrarse', params: { destino } }}
+          style={{ color: paleta.secundario, fontFamily: 'Manrope_600SemiBold', textAlign: 'center', paddingVertical: 8 }}>
+          ¿No tenés cuenta? Creá una
+        </Link>
       </View>
     </KeyboardAvoidingView>
   );
-}
-
-function input(paleta: ReturnType<typeof useTema>['paleta']) {
-  return {
-    minHeight: 48,
-    borderWidth: 1,
-    borderColor: paleta.linea,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    color: paleta.texto,
-    fontFamily: 'Manrope_400Regular' as const,
-    backgroundColor: paleta.superficie,
-  };
-}
-
-function cta(paleta: ReturnType<typeof useTema>['paleta']) {
-  return {
-    minHeight: 48,
-    borderRadius: 14,
-    backgroundColor: paleta.cta,
-    alignItems: 'center' as const,
-    justifyContent: 'center' as const,
-  };
-}
-
-function err(paleta: ReturnType<typeof useTema>['paleta']) {
-  return { color: paleta.ocupado, fontFamily: 'Manrope_400Regular' as const };
 }

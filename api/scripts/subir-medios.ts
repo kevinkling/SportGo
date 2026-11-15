@@ -19,8 +19,8 @@ if (!URL_SUPABASE || !CLAVE) {
   throw new Error('Faltan SUPABASE_URL y SUPABASE_SERVICE_KEY. Mirá api/.env.example.');
 }
 
-const FOTOS = fileURLToPath(new URL('../../assets/images/mocks/', import.meta.url));
-const VIDEOS = fileURLToPath(new URL('../../assets/videos/mocks/', import.meta.url));
+const FOTOS = fileURLToPath(new URL('../medios/fotos/', import.meta.url));
+const VIDEOS = fileURLToPath(new URL('../medios/videos/', import.meta.url));
 
 const cabeceras = { Authorization: `Bearer ${CLAVE}`, apikey: CLAVE };
 const urlPublica = (ruta: string) => `${URL_SUPABASE}/storage/v1/object/public/${BUCKET}/${ruta}`;

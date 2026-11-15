@@ -1,4 +1,5 @@
 import * as Linking from 'expo-linking';
+import { useSQLiteContext } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Switch, Text, View } from 'react-native';
 
@@ -19,6 +20,7 @@ interface Props {
 
 export function PreferenciasAvisos({ reservas }: Props) {
   const { paleta } = useTema();
+  const db = useSQLiteContext();
   const [prefs, setPrefs] = useState<PreferenciasNotif>({ recordatorios: true, favoritos: true });
   const [permiso, setPermiso] = useState<'granted' | 'denied' | 'undetermined'>('undetermined');
   const [listo, setListo] = useState(false);
@@ -42,7 +44,7 @@ export function PreferenciasAvisos({ reservas }: Props) {
     setPrefs(siguiente);
     await guardarPreferenciasNotif(siguiente);
     if (clave === 'recordatorios' && valor) {
-      await reprogramarRecordatorios(reservas);
+      await reprogramarRecordatorios(db, reservas);
     }
   }
 

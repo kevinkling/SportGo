@@ -114,7 +114,7 @@ export default function ReservasScreen() {
   const ahora = new Date();
 
   async function onCancelar(id: string) {
-    const r = await cancelarReserva(db, id, ahora);
+    const r = await cancelarReserva(db, id);
     if (esError(r)) {
       setMensajeCancelar({ id, texto: r.error.mensaje });
       return;

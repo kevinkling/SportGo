@@ -159,7 +159,6 @@ export default function TurnosScreen() {
     }
     if (!elegido || !sePuede) return;
     const r = await crearReserva(db, {
-      usuarioId: sesion.usuario.id,
       espacioId: cancha.id,
       fecha: dia,
       inicio: elegido.inicio,

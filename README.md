@@ -40,7 +40,7 @@ pnpm dlx eas-cli@latest build --profile preview --platform android
 
 ## Cuentas de prueba
 
-Los datos son inventados (ver `src/mocks/catalogo.ts`). La clave de todas las cuentas es `1234`.
+Son cuentas de la API desplegada (se cargan con `pnpm migrar` en `api/`). La clave de todas es `1234`. Cualquiera puede además crear la suya desde "¿No tenés cuenta?" en la pantalla de ingreso.
 
 | Rol | Correo |
 |---|---|
@@ -69,20 +69,35 @@ Decisiones:
 
 - **Sin `expo-sensors`**: `expo-haptics` alcanza para la vibración de ingreso válido/inválido.
 - **Sin `expo-image-picker` ni `expo-audio`**: el PRD no pide subir fotos ni audio; el video se reproduce con `expo-video`.
-- **Datos inventados detrás de servicios**: ninguna pantalla lee los mocks directamente; todo pasa por `src/servicios/`, que hoy devuelven datos locales y son asíncronos para cambiar a `fetch` cuando llegue la API.
+- **API propia**: la cátedra no publicó la API, así que se hizo una con la forma exacta que fija el PRD (ver `api/`). La app habla con ella sólo desde `src/servicios/`, y `src/servicios/api.ts` es el único lugar que hace `fetch`.
+- **SQLite es caché, no fuente de verdad**: cada lectura exitosa se guarda y, sin conexión, se devuelve la última copia. Mis reservas (con su QR) quedan siempre en el teléfono para mostrarse en la puerta.
 
 ## Estructura
 
 ```
 src/
-  app/          Rutas (Expo Router): (tabs), (gestion), espacio, mapa, ingresar
+  app/          Rutas (Expo Router): (tabs), (gestion), espacio, mapa, ingresar, registrarse
   components/   Componentes de UI
   constants/    Tema y paletas (claro / oscuro)
   contexto/     Tema, sesión y flujo de reserva
   dominio/      Lógica pura con tests (grilla, fijas, ingreso, recordatorios, distancia)
-  mocks/        Datos de prueba
-  persistencia/ Esquema y consultas SQLite
-  servicios/    Acceso a datos, sesión, biometría, notificaciones, ubicación
+  persistencia/ Esquema SQLite, caché de la API y descarga de fotos y video
+  servicios/    Cliente de la API, sesión, biometría, notificaciones, ubicación
   tipos/        Tipos compartidos (entidades y forma de respuesta de la API)
 docs/           Guion del video de presentación
+api/            Servidor (Hono + Postgres de Supabase), se despliega en Render
 ```
+
+## API
+
+Vive en `api/` y se despliega en Render (`https://sportgo-api-adjb.onrender.com`). La base de datos y los archivos (fotos y video de las canchas) están en Supabase. UptimeRobot le pega a `/salud` cada 5 minutos para que Render no la duerma.
+
+```bash
+cd api
+pnpm install
+cp .env.example .env   # completar DATABASE_URL y JWT_SECRETO
+pnpm dev               # servidor local en el puerto 3000
+pnpm migrar --demo     # datos del municipio, usuarios de prueba y casos de ejemplo
+```
+
+La app usa esa URL por defecto; para apuntar a otra (por ejemplo `pnpm dev` en la compu) se define `EXPO_PUBLIC_API_URL`.

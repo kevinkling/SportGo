@@ -53,7 +53,7 @@ export default function EspaciosScreen() {
     if (!yaCargo.current) setCarga(true);
     setError(null);
     const [d, e, fav, fotos] = await Promise.all([
-      listarDeportes(),
+      listarDeportes(db),
       listarEspacios(db),
       leerFavoritos(),
       portadasDeEspacios(db),
