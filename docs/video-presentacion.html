@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>SportGo - Plan del video de presentación</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #1b1b1b; font-size: 11pt; line-height: 1.45; }
+  h1 { color: #2E7D32; font-size: 24pt; margin: 0 0 4px; }
+  .sub { color: #666; margin-bottom: 18px; }
+  h2 { color: #2E7D32; border-bottom: 2px solid #2E7D32; padding-bottom: 3px; margin-top: 26px; font-size: 15pt; }
+  h3 { font-size: 11.5pt; margin: 14px 0 4px; }
+  .tiempo { color: #666; font-weight: normal; font-size: 10pt; }
+  ol, ul { margin: 4px 0 8px 0; padding-left: 22px; }
+  li { margin-bottom: 2px; }
+  .texto { background: #f1f7f1; border-left: 4px solid #2E7D32; padding: 8px 14px; margin: 8px 0; border-radius: 4px; }
+  .texto p { margin: 6px 0; }
+  .bloque { page-break-inside: avoid; }
+  table { border-collapse: collapse; width: 100%; margin-top: 6px; }
+  td, th { border: 1px solid #ccc; padding: 5px 8px; text-align: left; vertical-align: top; }
+  th { background: #e8f0e8; }
+  .corte { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<h1>SportGo</h1>
+<div class="sub">Plan del video de presentación (~20 min) · Kevin, Cerros, Fran y Luz</div>
+
+<p>Cuatro bloques de unos 5 minutos, uno por integrante. Cada bloque tiene una demo en el teléfono y un cierre técnico corto de aproximadamente 1 minuto.</p>
+
+<h2>Apertura <span class="tiempo">(0:00 – 1:00) · Kevin</span></h2>
+<ul>
+  <li>Quiénes somos y qué es SportGo.</li>
+  <li><b>El problema:</b> reservas por WhatsApp y libretas. Hay doble reserva, no se puede avisar por lluvia y el 30% de los turnos reservados no se usa.</li>
+  <li><b>La solución:</b> ver qué hay libre, reservar solo, cancelar con un botón y entrar con QR.</li>
+  <li>Quién presenta qué.</li>
+</ul>
+
+<div class="bloque">
+<h2>Bloque 1 – Kevin: espacios y disponibilidad <span class="tiempo">(1:00 – 6:00)</span></h2>
+<h3>Demo</h3>
+<ol>
+  <li>Abrir la app sin cuenta: se ve la disponibilidad sin pedir login.</li>
+  <li>Listado de los 11 espacios, con filtro por deporte y por complejo.</li>
+  <li>Ficha de un espacio: fotos, precio por hora, reglas y video del recorrido. Mostrar también uno sin video.</li>
+  <li>Mapa con los complejos y "Cómo llegar". Sin permiso de ubicación todo sigue andando.</li>
+  <li>Grilla de disponibilidad: selector de día y próximos 7 días; estados libre, ocupado, fijo y mantenimiento; día bloqueado por lluvia; grilla sin turnos libres; turno pasado que no se puede reservar.</li>
+</ol>
+<h3>Texto técnico (~1 min)</h3>
+<div class="texto">
+<p>"Lo más complicado de SportGo es la grilla de disponibilidad. Parece una tabla con horarios y listo, pero cada hora que ven en pantalla sale de mezclar tres cosas.</p>
+<p>Una: las reservas que hizo la gente. Dos: las <b>reservas fijas</b>, como el grupo de los martes a las 21:00. Ojo, una fija no es un turno guardado, es una regla que ocupa ese horario todas las semanas. Y tres: los bloqueos por mantenimiento o lluvia.</p>
+<p>La app cruza esas tres cosas para cada día y cada cancha, y decide si cada hora está libre, ocupada, fija o en mantenimiento. Si no hiciéramos ese cruce, la grilla te mostraría como libre algo que ya está tomado, y volveríamos al lío de la doble reserva.</p>
+<p>Ah, y un turno que ya pasó no se puede reservar, aunque figure libre."</p>
+</div>
+</div>
+
+<div class="bloque">
+<h2>Bloque 2 – Cerros: reservar y mis reservas <span class="tiempo">(6:00 – 11:00)</span></h2>
+<h3>Demo</h3>
+<ol>
+  <li>Elegir un turno libre y tocar Reservar. Recién ahí se pide el login.</li>
+  <li>Indicar deporte y cantidad de personas. Reservar en dos toques.</li>
+  <li>Pantalla "Mis reservas", separada en próximas y pasadas.</li>
+  <li>Detalle de la reserva: precio ("se paga en el lugar"), QR y "Cómo llegar".</li>
+  <li>Cancelar con más de 4 horas de margen: se cancela sola. Mostrar la leyenda "hasta las HH:MM".</li>
+  <li>Cancelar con menos de 4 horas: la app indica que hay que avisar a la Dirección.</li>
+  <li>Límite de 3 reservas activas y error de "turno ocupado".</li>
+</ol>
+<h3>Texto técnico (~20 s)</h3>
+<div class="texto">
+<p>"Los tipos de datos (espacios, turnos, reservas, usuarios) los escribimos una sola vez. Los datos de prueba están aparte, y metimos casos jodidos a propósito: un día bloqueado por lluvia, una grilla sin turnos libres, y cosas así.</p>
+<p>Ninguna pantalla lee esos datos directo. Todo pasa por una capa de <b>servicios asincrónicos</b>."</p>
+</div>
+</div>
+
+<div class="bloque">
+<h2>Bloque 3 – Fran: ingreso con QR y modo offline <span class="tiempo">(11:00 – 16:00)</span></h2>
+<h3>Demo</h3>
+<ol>
+  <li>Offline: modo avión, y la reserva con su QR siguen visibles.</li>
+  <li>Cambiar a la cuenta de encargado. Reingreso con huella antes de escanear.</li>
+  <li>Escanear el QR con la cámara: válido (vibración, mensaje de éxito y hora de ingreso) y de otro día u otra cancha (vibración distinta y mensaje claro).</li>
+  <li>Marcar "no se presentó".</li>
+  <li>Mostrar cómo queda registrada la ausencia o la cancelación tardía del usuario.</li>
+</ol>
+<h3>Texto técnico (~1 min)</h3>
+<div class="texto">
+<p>"El QR se muestra en la puerta de la cancha, y ahí muchas veces no hay señal. Por eso las reservas y el QR se guardan <b>en el teléfono</b>, en una base de datos local, y se ven sin conexión.</p>
+<p>En seguridad, el token de sesión va al almacenamiento seguro del celular, no al común. Y el encargado tiene que poner su <b>huella</b> antes de escanear, así nadie le usa la cuenta si le agarra el teléfono.</p>
+<p>Para escanear usamos la <b>cámara</b>, y la app responde con vibraciones distintas: una si el ingreso es válido y otra si no. Así el encargado se da cuenta sin mirar la pantalla, algo útil de noche o con sol."</p>
+</div>
+</div>
+
+<div class="bloque">
+<h2>Bloque 4 – Luz: gestión, avisos y modo oscuro <span class="tiempo">(16:00 – 20:00)</span></h2>
+<h3>Demo</h3>
+<ol>
+  <li>Cuenta de administrador o encargado.</li>
+  <li>Agenda del día de todos los espacios.</li>
+  <li>Bloquear un turno o un día entero con motivo escrito, y ver cómo se refleja en la grilla de un jugador.</li>
+  <li>Cargar una reserva fija (por ejemplo martes 21:00) y ver que la grilla la muestra como "FIJO".</li>
+  <li>Cambiar el precio por hora de un espacio.</li>
+  <li>Notificaciones: recordatorio 2 horas antes, aviso de suspensión por lluvia y aviso de turno liberado en un favorito.</li>
+  <li>Modo oscuro: legibilidad de noche.</li>
+</ol>
+<h3>Texto técnico (~1 min)</h3>
+<div class="texto">
+<p>"SportGo está hecha con <b>React Native y Expo</b>, y con <b>TypeScript</b>. Con eso tenemos una sola app que anda en Android y en iPhone, que viene bien porque la mayoría usa Android.</p>
+<p>Para movernos entre pantallas usamos Expo Router, y la app tiene <b>modo oscuro</b>, pensado para cuando se usa de noche.</p>
+<p>Los recordatorios, como el aviso dos horas antes o la suspensión por lluvia, son <b>notificaciones</b> del propio teléfono."</p>
+</div>
+</div>
+
+<h2>Cierre <span class="tiempo">(19:30 – 20:00) · todos o Kevin</span></h2>
+<ul>
+  <li>Qué entra en la v1 y qué queda afuera: pagos online, torneos y armado de equipos.</li>
+  <li>Próximos pasos: conectar la API real.</li>
+  <li>Agradecimiento.</li>
+</ul>
+
+<div class="bloque">
+<h2>Preparación antes de grabar</h2>
+<table>
+  <tr><th>Tarea</th><th>Detalle</th></tr>
+  <tr><td>Datos de demo</td><td>Cargar los casos difíciles: día de lluvia, grilla llena, espacio sin video, reserva cancelada y fija de los martes.</td></tr>
+  <tr><td>Build</td><td>Usar un build de desarrollo o producción, no Expo Go, para que anden cámara, mapas y notificaciones.</td></tr>
+  <tr><td>Dispositivo</td><td>Android con grabación de pantalla. Dejar listo un usuario encargado y un QR en otra pantalla para escanear.</td></tr>
+  <tr><td>Guion</td><td>Cada uno practica su bloque con cronómetro.</td></tr>
+  <tr><td>Orden</td><td>Primero grabar pantallas, después la voz en off, y por último editar.</td></tr>
+  <tr><td>Entrega</td><td>Exportar en 1080p, con subtítulos opcionales.</td></tr>
+</table>
+
+<h2>Riesgos y plan B</h2>
+<ul>
+  <li><b>La cámara o el QR falla:</b> tener un video corto pregrabado de respaldo.</li>
+  <li><b>Notificaciones que no llegan a tiempo:</b> usar una de prueba con disparo a 10 segundos.</li>
+  <li><b>Función sin terminar:</b> mostrarla con datos inventados y decirlo con claridad.</li>
+</ul>
+</div>
+
+</body>
+</html>

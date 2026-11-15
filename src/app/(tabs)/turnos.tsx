@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useRouter } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -13,7 +13,7 @@ import { useTema } from '@/contexto/tema';
 import { fechaISO, nombreCortoDia, numeroDia, proximosSieteDias, tituloDia } from '@/dominio/fechas';
 import { faseTurno, turnoReservable, type ResultadoGrilla } from '@/dominio/grilla';
 import { leerFavoritos, alternarFavorito } from '@/servicios/favoritos';
-import { obtenerEspacio } from '@/servicios/espacios';
+import { listarEspacios, obtenerEspacio } from '@/servicios/espacios';
 import { crearReserva, obtenerGrilla } from '@/servicios/reservas';
 import { esError, type Espacio, type Turno } from '@/tipos';
 
@@ -22,7 +22,7 @@ export default function TurnosScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const db = useSQLiteContext();
-  const { espacioId } = useFlujo();
+  const { espacioId, setEspacioId } = useFlujo();
   const { sesion } = useSesion();
   const hoy = fechaISO();
   const dias = proximosSieteDias(hoy);
@@ -35,6 +35,13 @@ export default function TurnosScreen() {
   const [error, setError] = useState<string | null>(null);
   const [favoritos, setFavoritos] = useState<string[]>([]);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [todos, setTodos] = useState<Espacio[]>([]);
+
+  useEffect(() => {
+    void listarEspacios(db).then((r) => {
+      if (!esError(r)) setTodos(r.datos);
+    });
+  }, [db]);
 
   const cargar = useCallback(async () => {
     if (!espacioId) {
@@ -79,6 +86,33 @@ export default function TurnosScreen() {
 
   const estilos = crear(paleta);
 
+  const selector = (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={estilos.chipsScroll}
+      contentContainerStyle={estilos.chips}>
+      {todos.map((e) => {
+        const on = e.id === espacioId;
+        return (
+          <Pressable
+            key={e.id}
+            onPress={() => {
+              setAviso(null);
+              setEspacioId(e.id);
+            }}
+            accessibilityRole="button"
+            accessibilityState={{ selected: on }}
+            style={[estilos.chip, on && { backgroundColor: paleta.texto, borderColor: paleta.texto }]}>
+            <Text style={{ color: on ? paleta.fondo : paleta.texto, fontFamily: 'Manrope_600SemiBold', fontSize: 13 }}>
+              {e.nombre}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </ScrollView>
+  );
+
   if (!espacioId) {
     return (
       <View style={[estilos.pantalla, { paddingTop: insets.top + 8 }]}>
@@ -86,6 +120,7 @@ export default function TurnosScreen() {
           <Text style={[estilos.titulo, { paddingHorizontal: 0, flex: 1 }]}>Turnos</Text>
           <BotonSesion />
         </View>
+        {selector}
         <Text style={estilos.muted}>Elegí un espacio para ver la grilla.</Text>
       </View>
     );
@@ -119,7 +154,7 @@ export default function TurnosScreen() {
 
   async function reservar() {
     if (!sesion) {
-      router.push('/ingresar');
+      router.push({ pathname: '/ingresar', params: { destino: 'reservas' } });
       return;
     }
     if (!elegido || !sePuede) return;
@@ -155,6 +190,7 @@ export default function TurnosScreen() {
         </Pressable>
         <BotonSesion />
       </View>
+      {selector}
 
       <View style={estilos.dias}>
         {dias.map((f) => {
@@ -333,6 +369,17 @@ function crear(paleta: ReturnType<typeof useTema>['paleta']) {
     titulo: { fontFamily: 'BarlowCondensed_600SemiBold', fontSize: 42, color: paleta.texto, paddingHorizontal: 16 },
     muted: { fontFamily: 'Manrope_400Regular', color: paleta.secundario, fontSize: 13, paddingHorizontal: 16 },
     cabeza: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 6, zIndex: 10 },
+    chipsScroll: { flexGrow: 0, marginTop: 8 },
+    chips: { paddingHorizontal: 12, gap: 8 },
+    chip: {
+      minHeight: 40,
+      paddingHorizontal: 14,
+      borderRadius: 20,
+      borderWidth: 1,
+      borderColor: paleta.linea,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
     icono: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
     nombre: { fontFamily: 'Manrope_700Bold', fontSize: 20, color: paleta.texto, textAlign: 'center' },
     dias: { flexDirection: 'row', gap: 4, paddingHorizontal: 12, paddingTop: 12 },

@@ -1,6 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
-import { cancelableHastaIso, armarGrilla, fechaDesdeTurnoId, horaDesdeTurnoId, puedeSumarReserva, turnoReservable } from '@/dominio/grilla';
+import { cancelableHastaIso, armarGrilla, esCancelacionTardia, fechaDesdeTurnoId, horaDesdeTurnoId, puedeSumarReserva, turnoReservable } from '@/dominio/grilla';
 import { isoConZona } from '@/dominio/fechas';
 import { espacios } from '@/mocks/catalogo';
 import { leerDiasBloqueados, leerFijas, leerPrecios, leerTurnosBloqueados } from '@/persistencia/gestion';
@@ -146,6 +146,12 @@ export async function cancelarReserva(
   if (!fila) return fallo('NO_ENCONTRADO', 'No encontramos esa reserva.');
   if (fila.estado !== 'confirmada') {
     return fallo('ESTADO', 'Esa reserva ya no se puede cancelar.');
+  }
+  if (esCancelacionTardia(fila.cancelableHasta, ahora)) {
+    return fallo(
+      'CANCELACION_TARDIA',
+      'Faltan menos de 4 horas: ya no se puede cancelar desde la app. Avisá a la Dirección de Deportes.',
+    );
   }
   await db.runAsync("UPDATE reservas SET estado = 'cancelada' WHERE id = ?", id);
   await cancelarRecordatorio(id);

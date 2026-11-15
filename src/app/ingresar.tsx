@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Controller, useForm } from 'react-hook-form';
 import { KeyboardAvoidingView, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { z } from 'zod';
@@ -10,7 +10,11 @@ import { ingresar, puedeGestionar } from '@/servicios/sesion';
 import { esError } from '@/tipos';
 
 const esquema = z.object({
-  email: z.string().min(3, 'Escribí el correo'),
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Escribí el correo')
+    .pipe(z.email('Ingresá un correo válido, por ejemplo nombre@mail.com')),
   clave: z.string().min(4, 'Mínimo 4 caracteres'),
 });
 
@@ -20,6 +24,7 @@ export default function IngresarScreen() {
   const { paleta } = useTema();
   const { setSesion } = useSesion();
   const router = useRouter();
+  const { destino } = useLocalSearchParams<{ destino?: string }>();
   const {
     control,
     handleSubmit,
@@ -41,6 +46,10 @@ export default function IngresarScreen() {
       router.replace('/(gestion)/agenda');
       return;
     }
+    if (destino === 'reservas') {
+      router.dismissTo('/(tabs)/reservas');
+      return;
+    }
     router.back();
   });
 
@@ -49,9 +58,6 @@ export default function IngresarScreen() {
       style={{ flex: 1, backgroundColor: paleta.fondo }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={{ padding: 16, gap: 12 }}>
-        <Text style={{ color: paleta.secundario, fontFamily: 'Manrope_400Regular' }}>
-          Jugador: emiliano@mail.com · Encargado: marcelo@villaguay.gob.ar · Admin: nahuel@villaguay.gob.ar · clave 1234
-        </Text>
         <Controller
           control={control}
           name="email"

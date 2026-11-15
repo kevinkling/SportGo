@@ -35,13 +35,11 @@ export function BotonSesion() {
         accessibilityLabel={sesion ? `Cuenta de ${sesion.usuario.nombre}` : 'Entrar'}
         style={estilos.icono}>
         <Ionicons name="person-outline" size={22} color={paleta.texto} />
-        {sesion ? (
-          <Text
-            style={[estilos.etiqueta, { color: paleta.texto }]}
-            numberOfLines={1}>
-            {sesion.usuario.nombre.split(' ')[0]}
-          </Text>
-        ) : null}
+        <Text
+          style={[estilos.etiqueta, { color: paleta.texto }]}
+          numberOfLines={1}>
+          {sesion ? sesion.usuario.nombre.split(' ')[0] : 'Entrar'}
+        </Text>
       </Pressable>
       {sesion && abierto ? (
         <View

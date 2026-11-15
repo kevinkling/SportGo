@@ -9,7 +9,14 @@ import { useSesion } from '@/contexto/sesion';
 import { useTema } from '@/contexto/tema';
 import { fechaISO, nombreCortoDia, numeroDia, proximosSieteDias, tituloDia } from '@/dominio/fechas';
 import { agendaDelDia, marcarAusente, type ItemAgenda } from '@/servicios/gestion';
-import { esError } from '@/tipos';
+import { esError, type EstadoReserva } from '@/tipos';
+
+const ETIQUETA_RESERVA: Record<EstadoReserva, string> = {
+  confirmada: 'confirmada',
+  cancelada: 'cancelada',
+  cumplida: 'ingresó',
+  ausente: 'no se presentó',
+};
 
 export default function AgendaScreen() {
   const { paleta } = useTema();
@@ -76,7 +83,7 @@ export default function AgendaScreen() {
           <Text style={estilos.espacio}>{item.espacio.nombre}</Text>
           {item.bloqueado ? <Text style={{ color: paleta.lluvia, fontFamily: 'Manrope_600SemiBold' }}>{item.motivo}</Text> : null}
           {item.turnos
-            .filter((t) => t.estado !== 'libre')
+            .filter((t) => t.estado !== 'libre' || t.reserva !== null)
             .map((t) => (
               <View key={t.id} style={estilos.fila}>
                 <Text style={estilos.hora}>{t.inicio}</Text>
@@ -87,7 +94,7 @@ export default function AgendaScreen() {
                       : t.estado === 'mantenimiento'
                         ? `Bloqueado · ${t.motivoBloqueo}`
                         : t.reserva
-                          ? `${t.reserva.cantidadPersonas} pers. · ${t.reserva.estado}`
+                          ? `${t.reserva.cantidadPersonas} pers. · ${ETIQUETA_RESERVA[t.reserva.estado]}`
                           : 'Reservado'}
                   </Text>
                   {t.reserva ? (
@@ -98,7 +105,7 @@ export default function AgendaScreen() {
                 </View>
                 {t.reserva?.estado === 'confirmada' ? (
                   <Pressable onPress={() => onAusente(t.reserva!.id)} style={estilos.ausente}>
-                    <Text style={{ color: paleta.ocupado, fontFamily: 'Manrope_700Bold' }}>Ausente</Text>
+                    <Text style={{ color: paleta.ocupado, fontFamily: 'Manrope_700Bold' }}>No se presentó</Text>
                   </Pressable>
                 ) : null}
               </View>
@@ -131,6 +138,13 @@ function crear(paleta: ReturnType<typeof useTema>['paleta']) {
     espacio: { fontFamily: 'Manrope_700Bold', fontSize: 18, color: paleta.texto },
     fila: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 48 },
     hora: { fontFamily: 'Manrope_700Bold', color: paleta.texto, width: 52 },
-    ausente: { minHeight: 44, justifyContent: 'center', paddingHorizontal: 8 },
+    ausente: {
+      minHeight: 44,
+      justifyContent: 'center',
+      paddingHorizontal: 12,
+      borderRadius: 10,
+      borderWidth: 1,
+      borderColor: paleta.ocupado,
+    },
   });
 }

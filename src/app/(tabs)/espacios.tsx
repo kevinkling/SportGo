@@ -1,7 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useRouter, type Href } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, Image, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -15,6 +15,11 @@ import { portadasDeEspacios } from '@/servicios/medios';
 import { esError, type Deporte, type Espacio } from '@/tipos';
 
 type FiltroAbierto = 'espacio' | 'complejo' | null;
+
+function posicion(orden: string[], id: string): number {
+  const i = orden.indexOf(id);
+  return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+}
 
 function resumenDe(nombres: string[]): string {
   if (nombres.length === 0) return 'Todos';
@@ -37,9 +42,12 @@ export default function EspaciosScreen() {
   const [complejosElegidos, setComplejosElegidos] = useState<string[]>([]);
   const [filtroAbierto, setFiltroAbierto] = useState<FiltroAbierto>(null);
   const [favoritos, setFavoritos] = useState<string[]>([]);
+  const [orden, setOrden] = useState<string[]>([]);
+  const yaCargo = useRef(false);
+  const listaRef = useRef<FlatList<Espacio>>(null);
 
   const cargar = useCallback(async () => {
-    setCarga(true);
+    if (!yaCargo.current) setCarga(true);
     setError(null);
     const [d, e, fav, fotos] = await Promise.all([
       listarDeportes(),
@@ -60,7 +68,14 @@ export default function EspaciosScreen() {
     setDeportes(d.datos);
     setLista(e.datos);
     setFavoritos(fav);
+    setOrden((previo) => {
+      if (previo.length > 0) return previo;
+      return [...e.datos]
+        .sort((a, b) => Number(fav.includes(b.id)) - Number(fav.includes(a.id)))
+        .map((x) => x.id);
+    });
     setPortadas(fotos);
+    yaCargo.current = true;
     setCarga(false);
   }, [db]);
 
@@ -77,11 +92,8 @@ export default function EspaciosScreen() {
       const okComplejo = complejosElegidos.length === 0 || complejosElegidos.includes(claveComplejo);
       return okEspacio && okComplejo;
     });
-    return coinciden
-      .map((esp, indice) => ({ esp, indice, fav: favoritos.includes(esp.id) }))
-      .sort((a, b) => Number(b.fav) - Number(a.fav) || a.indice - b.indice)
-      .map((item) => item.esp);
-  }, [lista, espaciosElegidos, complejosElegidos, favoritos]);
+    return [...coinciden].sort((a, b) => posicion(orden, a.id) - posicion(orden, b.id));
+  }, [lista, espaciosElegidos, complejosElegidos, orden]);
 
   const hayFiltro = espaciosElegidos.length > 0 || complejosElegidos.length > 0;
 
@@ -162,9 +174,8 @@ export default function EspaciosScreen() {
             onTodos={() => setEspaciosElegidos([])}
             onAlternar={(id) => alternar(id, espaciosElegidos, setEspaciosElegidos)}
             opciones={[...lista]
-              .map((esp, indice) => ({ esp, indice, fav: favoritos.includes(esp.id) }))
-              .sort((a, b) => Number(b.fav) - Number(a.fav) || a.indice - b.indice)
-              .map(({ esp }) => ({ id: esp.id, texto: esp.nombre }))}
+              .sort((a, b) => posicion(orden, a.id) - posicion(orden, b.id))
+              .map((esp) => ({ id: esp.id, texto: esp.nombre }))}
           />
         ) : null}
         {filtroAbierto === 'complejo' ? (
@@ -185,6 +196,7 @@ export default function EspaciosScreen() {
         {filtrados.length} {hayFiltro ? 'con este filtro' : 'espacios'}
       </Text>
       <FlatList
+        ref={listaRef}
         data={filtrados}
         keyExtractor={(item) => item.id}
         contentContainerStyle={{ paddingBottom: 24 }}
@@ -200,6 +212,10 @@ export default function EspaciosScreen() {
                 onPress={async () => {
                   const sig = await alternarFavorito(item.id);
                   setFavoritos(sig);
+                  if (sig.includes(item.id)) {
+                    setOrden((previo) => [item.id, ...previo.filter((x) => x !== item.id)]);
+                    listaRef.current?.scrollToOffset({ offset: 0, animated: true });
+                  }
                 }}
                 style={estilos.estrella}
                 accessibilityLabel={fav ? 'Sacar de favoritos' : 'Marcar como favorito'}>

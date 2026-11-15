@@ -1,6 +1,6 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as Haptics from 'expo-haptics';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
 import { AppState, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
@@ -9,51 +9,51 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BotonSesion } from '@/components/BotonSesion';
 import { useSesion } from '@/contexto/sesion';
 import { useTema } from '@/contexto/tema';
-import { confirmarIdentidad } from '@/servicios/biometria';
 import { validarIngreso } from '@/servicios/gestion';
 import { esError } from '@/tipos';
+
+// Código de mentira para la demo (reemplaza la biometría del teléfono).
+const PIN_ENCARGADO = '1234';
 
 export default function EscanearScreen() {
   const { paleta } = useTema();
   const insets = useSafeAreaInsets();
   const db = useSQLiteContext();
-  const router = useRouter();
   const { sesion } = useSesion();
   const [permiso, pedirPermiso] = useCameraPermissions();
   const [listo, setListo] = useState(false);
   const [pausado, setPausado] = useState(false);
   const [manual, setManual] = useState('');
+  const [pin, setPin] = useState('');
+  const [pinError, setPinError] = useState(false);
   const [resultado, setResultado] = useState<{ ok: boolean; titulo: string; detalle: string } | null>(null);
 
   useFocusEffect(
     useCallback(() => {
-      let vivo = true;
       setResultado(null);
       setPausado(false);
-      void confirmarIdentidad().then((ok) => {
-        if (!vivo) return;
-        if (!ok) {
-          router.back();
-          return;
-        }
-        setListo(true);
-      });
+      setListo(false);
+      setPin('');
+      setPinError(false);
       const sub = AppState.addEventListener('change', (estado) => {
         if (estado === 'background') setListo(false);
-        if (estado === 'active') {
-          void confirmarIdentidad().then((ok) => {
-            if (!ok) router.back();
-            else setListo(true);
-          });
-        }
       });
       return () => {
-        vivo = false;
         setListo(false);
         sub.remove();
       };
-    }, [router]),
+    }, []),
   );
+
+  function validarPin() {
+    if (pin === PIN_ENCARGADO) {
+      setPinError(false);
+      setListo(true);
+    } else {
+      setPinError(true);
+      setPin('');
+    }
+  }
 
   const estilos = crear(paleta);
 
@@ -77,7 +77,22 @@ export default function EscanearScreen() {
   if (!listo) {
     return (
       <View style={[estilos.pantalla, { paddingTop: insets.top + 16 }]}>
-        <Text style={estilos.muted}>Confirmá tu identidad para escanear.</Text>
+        <Text style={estilos.muted}>Ingresá el código de encargado para escanear.</Text>
+        <TextInput
+          value={pin}
+          onChangeText={setPin}
+          keyboardType="number-pad"
+          secureTextEntry
+          maxLength={4}
+          placeholder="Código"
+          placeholderTextColor={paleta.secundario}
+          onSubmitEditing={validarPin}
+          style={estilos.input}
+        />
+        {pinError ? <Text style={[estilos.muted, { color: paleta.ocupado }]}>Código incorrecto.</Text> : null}
+        <Pressable onPress={validarPin} style={[estilos.cta, { marginHorizontal: 16 }]}>
+          <Text style={estilos.ctaTexto}>Entrar</Text>
+        </Pressable>
       </View>
     );
   }

@@ -28,6 +28,7 @@ export default function ReservasScreen() {
   const [espacios, setEspacios] = useState<Espacio[]>([]);
   const [carga, setCarga] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mensajeCancelar, setMensajeCancelar] = useState<{ id: string; texto: string } | null>(null);
 
   const cargar = useCallback(async () => {
     if (!sesion) {
@@ -113,7 +114,12 @@ export default function ReservasScreen() {
 
   async function onCancelar(id: string) {
     const r = await cancelarReserva(db, id, ahora);
-    if (!esError(r)) cargar();
+    if (esError(r)) {
+      setMensajeCancelar({ id, texto: r.error.mensaje });
+      return;
+    }
+    setMensajeCancelar(null);
+    cargar();
   }
 
   return (
@@ -177,10 +183,18 @@ export default function ReservasScreen() {
                   <View style={{ borderTopWidth: 1, borderTopColor: paleta.linea, paddingTop: 8 }}>
                     <Text style={estilos.muted}>
                       {tardia
-                        ? 'La cancelación sin aviso ya cerró. Si cancelás ahora, queda el aviso.'
+                        ? 'Ya no se puede cancelar desde la app (faltan menos de 4 horas). Avisá a la Dirección de Deportes.'
                         : `Podés cancelar sin aviso hasta ${r.cancelableHasta.slice(11, 16)}.`}
                     </Text>
-                    <Pressable onPress={() => onCancelar(r.id)} style={estilos.secundario}>
+                    {mensajeCancelar?.id === r.id ? (
+                      <Text style={{ color: paleta.ocupado, fontFamily: 'Manrope_600SemiBold', paddingHorizontal: 16 }}>
+                        {mensajeCancelar.texto}
+                      </Text>
+                    ) : null}
+                    <Pressable
+                      disabled={tardia}
+                      onPress={() => onCancelar(r.id)}
+                      style={[estilos.secundario, tardia && { opacity: 0.4 }]}>
                       <Text style={{ color: paleta.texto, fontFamily: 'Manrope_700Bold' }}>Cancelar reserva</Text>
                     </Pressable>
                   </View>

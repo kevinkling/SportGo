@@ -1,7 +1,8 @@
 import { useFocusEffect } from 'expo-router';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BotonSesion } from '@/components/BotonSesion';
@@ -19,7 +20,8 @@ export default function PreciosScreen() {
   const { sesion } = useSesion();
   const [espacios, setEspacios] = useState<Espacio[]>([]);
   const [edits, setEdits] = useState<Record<string, string>>({});
-  const [aviso, setAviso] = useState<string | null>(null);
+  const [guardando, setGuardando] = useState<string | null>(null);
+  const [resultado, setResultado] = useState<{ id: string; ok: boolean; texto: string } | null>(null);
 
   const cargar = useCallback(async () => {
     const r = await listarEspacios(db);
@@ -39,10 +41,18 @@ export default function PreciosScreen() {
 
   async function onGuardar(id: string) {
     if (!sesion) return;
+    Keyboard.dismiss();
+    setGuardando(id);
     const n = Number(edits[id]?.replace(/\D/g, ''));
     const r = await cambiarPrecio(db, id, n, sesion.usuario.rol);
-    setAviso(esError(r) ? r.error.mensaje : `Precio actualizado: ${peso(r.datos.precio)}`);
-    if (!esError(r)) void cargar();
+    setGuardando(null);
+    if (esError(r)) {
+      setResultado({ id, ok: false, texto: r.error.mensaje });
+      return;
+    }
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setResultado({ id, ok: true, texto: `Precio guardado: ${peso(r.datos.precio)} por hora` });
+    void cargar();
   }
 
   return (
@@ -52,19 +62,36 @@ export default function PreciosScreen() {
         <BotonSesion />
       </View>
       <Text style={estilos.muted}>Pesos por hora. Se pagan en el lugar.</Text>
-      {aviso ? <Text style={estilos.muted}>{aviso}</Text> : null}
       {espacios.map((e) => (
         <View key={e.id} style={estilos.fila}>
           <Text style={estilos.nombre}>{e.nombre}</Text>
           <TextInput
             keyboardType="number-pad"
             value={edits[e.id] ?? ''}
-            onChangeText={(t) => setEdits((prev) => ({ ...prev, [e.id]: t }))}
+            onChangeText={(t) => {
+              setEdits((prev) => ({ ...prev, [e.id]: t }));
+              if (resultado?.id === e.id) setResultado(null);
+            }}
             style={estilos.input}
           />
-          <Pressable onPress={() => void onGuardar(e.id)} style={estilos.guardar}>
-            <Text style={{ color: paleta.ctaTexto, fontFamily: 'Manrope_700Bold' }}>Guardar</Text>
+          <Pressable
+            disabled={guardando !== null}
+            onPress={() => void onGuardar(e.id)}
+            style={[estilos.guardar, guardando !== null && { opacity: 0.6 }]}>
+            <Text style={{ color: paleta.ctaTexto, fontFamily: 'Manrope_700Bold' }}>
+              {guardando === e.id ? 'Guardando…' : 'Guardar'}
+            </Text>
           </Pressable>
+          {resultado?.id === e.id ? (
+            <Text
+              style={{
+                color: resultado.ok ? paleta.libreTexto : paleta.ocupado,
+                fontFamily: 'Manrope_600SemiBold',
+              }}>
+              {resultado.ok ? '✓ ' : ''}
+              {resultado.texto}
+            </Text>
+          ) : null}
         </View>
       ))}
     </ScrollView>

@@ -29,6 +29,7 @@ function Navegacion() {
         screenOptions={{
           headerStyle: { backgroundColor: paleta.fondo },
           headerTintColor: paleta.texto,
+          headerBackButtonDisplayMode: 'minimal',
           headerTitleStyle: { fontFamily: 'BarlowCondensed_600SemiBold' },
           contentStyle: { backgroundColor: paleta.fondo },
         }}>
