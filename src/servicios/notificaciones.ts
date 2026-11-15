@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { AndroidImportance } from 'expo-notifications';
 import type { SQLiteDatabase } from 'expo-sqlite';
 import Storage from 'expo-sqlite/kv-store';
 import { Platform } from 'react-native';
@@ -96,11 +97,11 @@ export async function configurarNotificaciones() {
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync(CANAL_RECORDATORIOS, {
         name: 'Recordatorios de turno',
-        importance: Notifications.AndroidImportance.HIGH,
+        importance: AndroidImportance.HIGH,
       });
       await Notifications.setNotificationChannelAsync(CANAL_AVISOS, {
         name: 'Avisos de turnos',
-        importance: Notifications.AndroidImportance.DEFAULT,
+        importance: AndroidImportance.DEFAULT,
       });
     }
   } catch {

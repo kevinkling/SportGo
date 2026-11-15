@@ -65,7 +65,7 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "SportGo pide Face ID antes de escanear un ingreso."
+          "faceIDPermission": "SportGo usa Face ID para confirmar que sos vos al volver a abrir la app y antes de escanear un ingreso."
         }
       ],
       [

@@ -10,6 +10,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { BannerSinConexion } from '@/components/BannerSinConexion';
 import { OyenteNotificaciones } from '@/components/OyenteNotificaciones';
+import { PuertaBiometrica } from '@/components/PuertaBiometrica';
 import { SplashInicio } from '@/components/SplashInicio';
 import { FlujoProvider } from '@/contexto/flujo';
 import { SesionProvider } from '@/contexto/sesion';
@@ -43,6 +44,7 @@ function Navegacion() {
         <Stack.Screen name="mapa" options={{ title: 'Mapa' }} />
       </Stack>
       <BannerSinConexion />
+      <PuertaBiometrica />
       {intro ? <SplashInicio onTerminar={cerrarIntro} /> : null}
     </View>
   );
