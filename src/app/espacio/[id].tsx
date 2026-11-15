@@ -132,7 +132,11 @@ export default function FichaEspacio() {
 
         <View style={{ paddingHorizontal: 16, paddingTop: 16, gap: 8 }}>
           <Text style={estilos.seccion}>Dónde queda</Text>
-          <MapaComplejo nombre={espacio.complejo} coordenadas={espacio.coordenadas} />
+          <MapaComplejo
+            complejos={[{ nombre: espacio.complejo, coordenadas: espacio.coordenadas }]}
+            centrarEn={espacio.coordenadas}
+            altura={220}
+          />
         </View>
 
         <View style={{ paddingHorizontal: 16, paddingTop: 16, gap: 8 }}>

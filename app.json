@@ -23,6 +23,8 @@
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.INTERNET",
         "android.permission.CAMERA",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.USE_BIOMETRIC",
         "android.permission.USE_FINGERPRINT"
       ]
@@ -70,6 +72,12 @@
         "expo-notifications",
         {
           "color": "#172016"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "SportGo usa tu ubicación para el mapa y para decir qué complejo queda más cerca. Si la denegás, el resto de la app sigue igual."
         }
       ]
     ],

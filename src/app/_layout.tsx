@@ -38,6 +38,7 @@ function Navegacion() {
         <Stack.Screen name="(gestion)" options={{ headerShown: false }} />
         <Stack.Screen name="ingresar" options={{ title: 'Entrar' }} />
         <Stack.Screen name="espacio" options={{ headerShown: false }} />
+        <Stack.Screen name="mapa" options={{ title: 'Mapa' }} />
       </Stack>
       {intro ? <SplashInicio onTerminar={cerrarIntro} /> : null}
     </View>

@@ -1,46 +1,138 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import * as Linking from 'expo-linking';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useTema } from '@/contexto/tema';
+import { complejoMasCercano, type ComplejoEnMapa } from '@/dominio/distancia';
+import {
+  abrirComoLlegar,
+  leerPermisoUbicacion,
+  pedirUbicacion,
+  ubicacionSiPermitida,
+  type PermisoUbicacion,
+} from '@/servicios/ubicacion';
 import type { Coordenadas } from '@/tipos';
 
-export function MapaComplejo({ nombre, coordenadas }: { nombre: string; coordenadas: Coordenadas }) {
+type Props = {
+  complejos: ComplejoEnMapa[];
+  centrarEn?: Coordenadas;
+  altura?: number;
+};
+
+export function MapaComplejo({ complejos }: Props) {
   const { paleta } = useTema();
-  const { latitud, longitud } = coordenadas;
+  const [permiso, setPermiso] = useState<PermisoUbicacion>('undetermined');
+  const [usuario, setUsuario] = useState<Coordenadas | null>(null);
+  const estilos = crear(paleta);
+
+  const cercano = useMemo(
+    () => (usuario ? complejoMasCercano(usuario, complejos) : null),
+    [usuario, complejos],
+  );
+
+  useEffect(() => {
+    let vivo = true;
+    async function cargarPermiso() {
+      const p = await leerPermisoUbicacion();
+      if (!vivo) return;
+      setPermiso(p);
+      if (p !== 'granted') return;
+      const coords = await ubicacionSiPermitida();
+      if (vivo && coords) setUsuario(coords);
+    }
+    void cargarPermiso();
+    return () => {
+      vivo = false;
+    };
+  }, []);
+
+  async function onUsarUbicacion() {
+    const r = await pedirUbicacion();
+    if (r.estado === 'concedida') {
+      setPermiso('granted');
+      setUsuario(r.coordenadas);
+      return;
+    }
+    const actual = await leerPermisoUbicacion();
+    setPermiso(actual === 'undetermined' ? 'denied' : actual);
+    setUsuario(null);
+  }
 
   return (
-    <Pressable
-      accessibilityRole="link"
-      onPress={() =>
-        void Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${latitud},${longitud}`)
-      }
-      style={[estilos.tarjeta, { backgroundColor: paleta.superficie, borderColor: paleta.linea }]}>
-      <View style={[estilos.icono, { backgroundColor: paleta.cta }]}>
-        <Ionicons name="location" size={22} color={paleta.ctaTexto} />
-      </View>
-      <View style={estilos.textos}>
-        <Text style={[estilos.titulo, { color: paleta.texto }]}>Ver ubicación</Text>
-        <Text style={[estilos.sub, { color: paleta.secundario }]} numberOfLines={1}>
-          {nombre}
+    <View style={estilos.wrap}>
+      {permiso === 'undetermined' ? (
+        <Pressable onPress={() => void onUsarUbicacion()} style={estilos.cta}>
+          <Text style={estilos.ctaTexto}>Usar mi ubicación</Text>
+        </Pressable>
+      ) : null}
+      {permiso === 'denied' ? (
+        <Text style={estilos.aviso}>
+          Sin ubicación no se marca el complejo más cercano. El mapa se ve igual.
         </Text>
-      </View>
-      <Ionicons name="open-outline" size={20} color={paleta.secundario} />
-    </Pressable>
+      ) : null}
+      {cercano ? <Text style={estilos.aviso}>Más cerca: {cercano.nombre}</Text> : null}
+      {complejos.map((c) => (
+        <Pressable
+          key={c.nombre}
+          accessibilityRole="link"
+          accessibilityLabel={`Cómo llegar a ${c.nombre}`}
+          onPress={() => void abrirComoLlegar(c.nombre, c.coordenadas)}
+          style={estilos.fila}>
+          <View style={estilos.icono}>
+            <Ionicons name="navigate-outline" size={20} color={paleta.ctaTexto} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={estilos.titulo}>{c.nombre}</Text>
+            <Text style={estilos.sub}>
+              Cómo llegar
+              {cercano?.nombre === c.nombre ? ' · Más cerca' : ''}
+            </Text>
+          </View>
+          <Ionicons name="open-outline" size={20} color={paleta.secundario} />
+        </Pressable>
+      ))}
+    </View>
   );
 }
 
-const estilos = StyleSheet.create({
-  tarjeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-  },
-  icono: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  textos: { flex: 1, gap: 2 },
-  titulo: { fontSize: 15, fontFamily: 'Manrope_700Bold' },
-  sub: { fontSize: 13, fontFamily: 'Manrope_400Regular' },
-});
+function crear(paleta: {
+  texto: string;
+  secundario: string;
+  linea: string;
+  cta: string;
+  ctaTexto: string;
+  superficie: string;
+}) {
+  return StyleSheet.create({
+    wrap: { gap: 8 },
+    cta: {
+      minHeight: 48,
+      borderRadius: 14,
+      backgroundColor: paleta.cta,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    ctaTexto: { color: paleta.ctaTexto, fontFamily: 'Manrope_700Bold' },
+    aviso: { fontFamily: 'Manrope_400Regular', color: paleta.secundario, fontSize: 13 },
+    fila: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+      padding: 14,
+      borderRadius: 14,
+      borderWidth: 1,
+      borderColor: paleta.linea,
+      backgroundColor: paleta.superficie,
+    },
+    icono: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: paleta.cta,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    titulo: { fontSize: 15, fontFamily: 'Manrope_700Bold', color: paleta.texto },
+    sub: { fontSize: 13, fontFamily: 'Manrope_400Regular', color: paleta.secundario },
+  });
+}

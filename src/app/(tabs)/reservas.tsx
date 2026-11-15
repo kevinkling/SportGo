@@ -14,6 +14,7 @@ import { esCancelacionTardia, fechaDesdeTurnoId } from '@/dominio/grilla';
 import { tituloDia } from '@/dominio/fechas';
 import { listarEspacios } from '@/servicios/espacios';
 import { cancelarReserva, listarAvisos, listarReservas } from '@/servicios/reservas';
+import { abrirComoLlegar } from '@/servicios/ubicacion';
 import { esError, type Aviso, type Espacio, type Reserva } from '@/tipos';
 
 export default function ReservasScreen() {
@@ -190,6 +191,14 @@ export default function ReservasScreen() {
                       <Text style={{ color: paleta.ocupado, fontFamily: 'Manrope_600SemiBold', paddingHorizontal: 16 }}>
                         {mensajeCancelar.texto}
                       </Text>
+                    ) : null}
+                    {esp ? (
+                      <Pressable
+                        onPress={() => void abrirComoLlegar(esp.complejo, esp.coordenadas)}
+                        style={estilos.secundario}
+                        accessibilityLabel={`Cómo llegar a ${esp.complejo}`}>
+                        <Text style={{ color: paleta.texto, fontFamily: 'Manrope_700Bold' }}>Cómo llegar</Text>
+                      </Pressable>
                     ) : null}
                     <Pressable
                       disabled={tardia}

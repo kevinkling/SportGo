@@ -9,9 +9,11 @@ import { BotonSesion } from '@/components/BotonSesion';
 import { colorDeporte, peso } from '@/constants/tema';
 import { useFlujo } from '@/contexto/flujo';
 import { useTema } from '@/contexto/tema';
+import { complejoMasCercano, complejosUnicos } from '@/dominio/distancia';
 import { listarDeportes, listarEspacios } from '@/servicios/espacios';
 import { alternarFavorito, leerFavoritos } from '@/servicios/favoritos';
 import { portadasDeEspacios } from '@/servicios/medios';
+import { ubicacionSiPermitida } from '@/servicios/ubicacion';
 import { esError, type Deporte, type Espacio } from '@/tipos';
 
 type FiltroAbierto = 'espacio' | 'complejo' | null;
@@ -43,6 +45,7 @@ export default function EspaciosScreen() {
   const [filtroAbierto, setFiltroAbierto] = useState<FiltroAbierto>(null);
   const [favoritos, setFavoritos] = useState<string[]>([]);
   const [orden, setOrden] = useState<string[]>([]);
+  const [complejoCercano, setComplejoCercano] = useState<string | null>(null);
   const yaCargo = useRef(false);
   const listaRef = useRef<FlatList<Espacio>>(null);
 
@@ -75,6 +78,11 @@ export default function EspaciosScreen() {
         .map((x) => x.id);
     });
     setPortadas(fotos);
+    if (!esError(e)) {
+      const yo = await ubicacionSiPermitida();
+      const cercano = yo ? complejoMasCercano(yo, complejosUnicos(e.datos)) : null;
+      setComplejoCercano(cercano?.nombre ?? null);
+    }
     yaCargo.current = true;
     setCarga(false);
   }, [db]);
@@ -144,6 +152,12 @@ export default function EspaciosScreen() {
     <View style={[estilos.pantalla, { paddingTop: insets.top + 8 }]}>
       <View style={estilos.cabeza}>
         <Text style={estilos.titulo}>Espacios</Text>
+        <Pressable
+          onPress={() => router.push('/mapa' as Href)}
+          accessibilityLabel="Mapa de complejos"
+          style={estilos.botonMapa}>
+          <Ionicons name="map-outline" size={22} color={paleta.texto} />
+        </Pressable>
         <BotonSesion />
       </View>
       <Text style={estilos.bajada}>Mirá sin cuenta. La cuenta hace falta recién para reservar.</Text>
@@ -242,6 +256,7 @@ export default function EspaciosScreen() {
                   {deporteNombre} · {item.complejo === 'Polideportivo Municipal' ? 'Polideportivo' : 'Parque Berduc'}
                 </Text>
                 <View style={estilos.pills}>
+                  {complejoCercano === item.complejo ? <Pill paleta={paleta} texto="Más cerca" /> : null}
                   <Pill paleta={paleta} texto={item.superficie} />
                   <Pill paleta={paleta} texto={item.iluminacion ? 'Luz' : 'Sin luz'} />
                   {item.techado ? <Pill paleta={paleta} texto="Cubierta" /> : null}
@@ -389,7 +404,8 @@ function Pill({ texto, paleta }: { texto: string; paleta: { secundario: string; 
 function crearEstilos(paleta: { fondo: string; texto: string; secundario: string; linea: string; cta: string; ctaTexto: string; superficie: string }) {
   return StyleSheet.create({
     pantalla: { flex: 1, backgroundColor: paleta.fondo, paddingHorizontal: 16, gap: 8 },
-    cabeza: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 10 },
+    cabeza: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', zIndex: 10, gap: 4 },
+    botonMapa: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
     titulo: { fontFamily: 'BarlowCondensed_600SemiBold', fontSize: 42, color: paleta.texto, lineHeight: 44, flex: 1 },
     bajada: { fontFamily: 'Manrope_400Regular', color: paleta.secundario, fontSize: 13 },
     muted: { fontFamily: 'Manrope_400Regular', color: paleta.secundario, fontSize: 13 },
