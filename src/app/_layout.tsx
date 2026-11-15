@@ -8,6 +8,7 @@ import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { BannerSinConexion } from '@/components/BannerSinConexion';
 import { OyenteNotificaciones } from '@/components/OyenteNotificaciones';
 import { SplashInicio } from '@/components/SplashInicio';
 import { FlujoProvider } from '@/contexto/flujo';
@@ -40,6 +41,7 @@ function Navegacion() {
         <Stack.Screen name="espacio" options={{ headerShown: false }} />
         <Stack.Screen name="mapa" options={{ title: 'Mapa' }} />
       </Stack>
+      <BannerSinConexion />
       {intro ? <SplashInicio onTerminar={cerrarIntro} /> : null}
     </View>
   );
